@@ -1,0 +1,34 @@
+{
+  "manifest_version": 2,
+  "name": "__MSG_appName__",
+  "version": "0.1",
+  "description": "__MSG_appDescription__",
+  "homepage_url": "https://github.com/recoders/chess-bot",
+  "default_locale": "en",
+  "icons": {
+    "128": "images/favicon-512x512.png",
+    "512": "images/favicon-512x512.png"
+  },
+  "page_action" :
+  {
+    "default_icon"  : "images/favicon-512x512.png",
+    "default_title" : "Chess.com bot ready to win!",
+    "default_popup" : "layouts/popup.html"
+  },
+  "background": {
+     "scripts": [ "scripts/background.js" ],
+     "persistent": false
+  },
+  "content_scripts": [ {
+    "js": [ 
+        "scripts/jquery-2.0.3.js",
+        "scripts/constants.js", 
+        "scripts/chess.js", 
+        "scripts/chess_controller.js"
+    ],
+    "matches": [ "http://*.chess.com/echess/game?id=*", "https://*.chess.com/echess/game?id=*" ]
+  } ],
+  "permissions": [
+    "*://www.chess.com/echess/*", "declarativeContent", "activeTab"
+  ]
+}

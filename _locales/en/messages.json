@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "Flittr Chess.com bot",
+    "description": "The name of the application"
+  },
+  "appDescription": {
+    "message": "Chess.com bot is chess bot working as Chrome extension at site Chess.com.",
+    "description": "The description of the application"
+  }
+}
