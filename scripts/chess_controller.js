@@ -3,74 +3,140 @@
 var bot = {};
 
 (function(engine){
-    engine.getCurrentFen = function () {
-        return $('.moveactions input').val();
-        
-        // Code below can be used in live version
-        var figures = [];
-        $("div.brd > div:not([id*=dummy]) img.chess_com_piece").each(function(i, o, e){
-            var col = o.id.charCodeAt(o.id.lastIndexOf('_') + 1) - 96; // 'a'.charCodeAt(0) - 1
-            var row = o.id.substr(o.id.lastIndexOf('_') + 2);
-            var figure = o.src.substr(o.src.lastIndexOf('/') + 1, 2);
-            if (!figures[row]) {
-                figures[row] = [];
-            }
-            figures[row][col] = figure;
-        });
-        var board = '';
-        for (var l = 8; l > 0; l--) {
-            var spaces = 0;
-            board += '/';
-            if (figures[l]) {
-                for (var i = 1; i <= 8; i++) {
-                    if (figures[l][i]) {
-                        if (spaces !== 0) {
-                            board += spaces.toString();
-                            spaces = 0;
-                        }
-                        if (figures[l][i][0] === 'w') {
-                           board += figures[l][i][1].toUpperCase();
-                        } else {
-                            board += figures[l][i][1];
-                        }
-                    } else {
-                        spaces++;
-                    }
-                }
-                if (spaces !== 0) {
-                    board += spaces.toString();
-                }
-            } else {
-                board += '8';
+    var g_backgroundEngineValid = true;
+    var g_backgroundEngine;
+    var g_analyzing = false;
+    
+    // CopyPaste from garbochess.js
+    function FormatSquare(square) {
+        var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        return letters[(square & 0xF) - 4] + ((9 - (square >> 4)) + 1);
+    }
+
+    function FormatMove(move) {
+        var result = FormatSquare(move & 0xFF) + FormatSquare((move >> 8) & 0xFF);
+        if (move & moveflagPromotion) {
+            if (move & moveflagPromoteBishop) result += "b";
+            else if (move & moveflagPromoteKnight) result += "n";
+            else if (move & moveflagPromoteQueen) result += "q";
+            else result += "r";
+        }
+        return result;
+    }
+
+    function GetMoveFromString(moveString) {
+        var moves = GenerateValidMoves();
+        for (var i = 0; i < moves.length; i++) {
+            if (FormatMove(moves[i]) == moveString) {
+                return moves[i];
             }
         }
-        // Remove first slash
-        board = board.substr(1);
-        var lastMove = $('#notation .mhl > a').text();
-        var movesCount = $('#notation span > a').length;
-        var halfMovesCount = movesCount / 2; 
-        var lastColor = movesCount % 2 === 0 ? 'b' : 'w';
-        // rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR b KQkq d6 1 2
-        board += ' ' + lastColor + ' KQkq ' + lastMove + ' ' + halfMovesCount + ' ' + (lastColor === 'b' ?  halfMovesCount + 1 : halfMovesCount);
+        alert("busted! ->" + moveString + " fen:" + GetFen());
+    }
+    // End of copypaste
+    
+    function EnsureAnalysisStopped() {
+        if (g_analyzing && g_backgroundEngine != null) {
+            g_backgroundEngine.terminate();
+            g_backgroundEngine = null;
+        }
+    }
+    
+    function MakeMove(move) {
+        if (engine.moveFound != null) {
+            engine.moveFound(move);
+        } else {
+            alert(move);
+        }
+    }
+
+    function InitializeBackgroundEngine(success) {
+        if (!g_backgroundEngineValid) {
+            return false;
+        }
+
+        if (g_backgroundEngine == null) {
+            // g_backgroundEngineValid = true;
+            try {
+                $.get("https://raw.githubusercontent.com/glinscott/Garbochess-JS/master/js/garbochess.js", {},
+                    function (workerCode) {
+                        try {
+                            var blob = new Blob([workerCode], {type : 'javascript/worker'});
+                            
+                            g_backgroundEngine = new Worker(window.URL.createObjectURL(blob));
+                            g_backgroundEngine.onmessage = function (e) {
+                                if (e.data.match("^pv") == "pv") {
+                                    // Ready Move
+                                    var move = e.data.substr(e.data.lastIndexOf('NPS:'));
+                                    move = move.substr(move.indexOf(' ') + 2);
+                                    move = move.substr(0, move.indexOf(' '));
+                                    MakeMove(move);
+                                } else if (e.data.match("^message") == "message") {
+                                    EnsureAnalysisStopped();
+                                    console.log(e.data.substr(8, e.data.length - 8));
+                                } else {
+                                    // I dont now what could be happened here:
+                                    // UIPlayMove(GetMoveFromString(e.data), null);
+                                }
+                            }
+                            g_backgroundEngine.error = function (e) {
+                                alert("Error from background worker:" + e.message);
+                            }
+                            g_backgroundEngine.postMessage("position " + GetFen());
+                            if (success) {
+                                success();
+                            }
+                        } catch (error) {
+                            g_backgroundEngineValid = false;
+                        }
+                    }
+                );
+            } catch (error) {
+                g_backgroundEngineValid = false;
+            }
+        }
+
+        return g_backgroundEngineValid;
+    }
+    
+    engine.getCurrentFen = function () {
+        return $('.moveactions input').val();
     };
     
-    engine.makeDecision = function (fen) {
-        
+    engine.makeMove = function (fen) {
+        if (g_backgroundEngine) {
+            g_backgroundEngine.postMessage("position " + fen);
+            g_backgroundEngine.postMessage("analyze");
+      
+        } else { 
+            InitializeBackgroundEngine(function(){
+                g_backgroundEngine.postMessage("position " + fen);
+                g_backgroundEngine.postMessage("analyze");
+            });
+        };
     };
     
-    engine.makeMove = function (nextMove) {
-        
-    };
-    
+    engine.moveFound = null;
+
+    InitializeBackgroundEngine();
 })(bot);
+
+bot.moveFound = function (move) {
+    $('.title.bottom-4').text('Next best move: '  + move);
+}
+
+$(document).ready(function() {
+    $('.title.bottom-4').before('<img src="https://raw.githubusercontent.com/recoders/chrome-bot/master/images/robot-20.png" />');
+    var fen = bot.getCurrentFen();
+    bot.makeMove(fen);
+});
 
 chrome.runtime.onMessage.addListener(function(request, data, sendResponse) {
 
     switch (request) {
         case CMD_START_BOT:
             var fen = bot.getCurrentFen();
-            var nextMove = bot.makeDecision(fen);
-            bot.makeMove(nextMove);
+            bot.makeMove(fen);
             break;
     }
 

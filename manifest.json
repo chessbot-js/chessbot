@@ -23,7 +23,6 @@
     "js": [ 
         "scripts/jquery-2.0.3.js",
         "scripts/constants.js", 
-        "scripts/chess.js", 
         "scripts/chess_controller.js"
     ],
     "matches": [ "http://*.chess.com/echess/game?id=*", "https://*.chess.com/echess/game?id=*" ]
