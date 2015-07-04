@@ -123,10 +123,10 @@ var bot = {};
 
 bot.moveFound = function (move) {
     $('.title.bottom-4').text('I suggest: '  + move);
-}
+};
 
 $(document).ready(function() {
-    $('.title.bottom-4').before('<img style="float: left;" src="https://raw.githubusercontent.com/recoders/chrome-bot/master/images/robot-20.png" />');
+    $('.title.bottom-4').before('<a href="https://github.com/recoders/chrome-bot" title="Open source"><img style="float: left;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chrome-bot/master/images/robot-20.png" /></a>');
     var fen = bot.getCurrentFen();
     bot.makeMove(fen);
 });
