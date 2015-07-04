@@ -122,11 +122,11 @@ var bot = {};
 })(bot);
 
 bot.moveFound = function (move) {
-    $('.title.bottom-4').text('Next best move: '  + move);
+    $('.title.bottom-4').text('I suggest: '  + move);
 }
 
 $(document).ready(function() {
-    $('.title.bottom-4').before('<img src="https://raw.githubusercontent.com/recoders/chrome-bot/master/images/robot-20.png" />');
+    $('.title.bottom-4').before('<img style="float: left;" src="https://raw.githubusercontent.com/recoders/chrome-bot/master/images/robot-20.png" />');
     var fen = bot.getCurrentFen();
     bot.makeMove(fen);
 });
