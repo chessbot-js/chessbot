@@ -7,34 +7,6 @@ var bot = {};
     var g_backgroundEngine;
     var g_analyzing = false;
     
-    // CopyPaste from garbochess.js
-    function FormatSquare(square) {
-        var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        return letters[(square & 0xF) - 4] + ((9 - (square >> 4)) + 1);
-    }
-
-    function FormatMove(move) {
-        var result = FormatSquare(move & 0xFF) + FormatSquare((move >> 8) & 0xFF);
-        if (move & moveflagPromotion) {
-            if (move & moveflagPromoteBishop) result += "b";
-            else if (move & moveflagPromoteKnight) result += "n";
-            else if (move & moveflagPromoteQueen) result += "q";
-            else result += "r";
-        }
-        return result;
-    }
-
-    function GetMoveFromString(moveString) {
-        var moves = GenerateValidMoves();
-        for (var i = 0; i < moves.length; i++) {
-            if (FormatMove(moves[i]) == moveString) {
-                return moves[i];
-            }
-        }
-        alert("busted! ->" + moveString + " fen:" + GetFen());
-    }
-    // End of copypaste
-    
     function EnsureAnalysisStopped() {
         if (g_analyzing && g_backgroundEngine != null) {
             g_backgroundEngine.terminate();
@@ -58,13 +30,14 @@ var bot = {};
         if (g_backgroundEngine == null) {
             // g_backgroundEngineValid = true;
             try {
-                $.get("https://raw.githubusercontent.com/glinscott/Garbochess-JS/master/js/garbochess.js", {},
+                $.get("https://raw.githubusercontent.com/recoders/chrome-bot/master/scripts/garbochess-m.js", {},
                     function (workerCode) {
                         try {
                             var blob = new Blob([workerCode], {type : 'javascript/worker'});
                             
                             g_backgroundEngine = new Worker(window.URL.createObjectURL(blob));
                             g_backgroundEngine.onmessage = function (e) {
+                                console.log(e);
                                 if (e.data.match("^pv") == "pv") {
                                     // Ready Move
                                     var move = e.data.substr(e.data.lastIndexOf('NPS:'));
@@ -75,6 +48,7 @@ var bot = {};
                                     EnsureAnalysisStopped();
                                     console.log(e.data.substr(8, e.data.length - 8));
                                 } else {
+                                    
                                     // I dont now what could be happened here:
                                     // UIPlayMove(GetMoveFromString(e.data), null);
                                 }
@@ -116,28 +90,92 @@ var bot = {};
         };
     };
     
+    // Live moves
+    var movesMaded = 0;
+    var getNextMove = function (movesContainer) {
+        var move = null;
+        var children = $(movesContainer).children();
+        if (children.length > 0) {
+            $(movesContainer).children().find('.gotomove').each(function(i, o){
+                if (i === movesMaded && o.innerText !== '') {
+                    move = o.innerText;
+                }
+            });
+            movesMaded++;
+        }
+        return move;
+    };
+
+    function regularMove (move) {
+        if (g_backgroundEngine) {
+            g_backgroundEngine.postMessage(move);
+            // g_backgroundEngine.postMessage("analyze");
+        } else { 
+            InitializeBackgroundEngine(function(){
+                g_backgroundEngine.postMessage(move);
+                // g_backgroundEngine.postMessage("analyze");
+            });
+        };
+    };
+    
+    engine.makeLiveMove = function (movesContainer) {
+        var nextMove = getNextMove(movesContainer);
+        while (nextMove) {
+            console.log('Catched move: #' + movesMaded + '. ' + nextMove);
+            regularMove(nextMove);
+            nextMove = getNextMove(movesContainer);
+        }
+    };
+    
+    engine.analyze = function () {
+        if (g_backgroundEngine) {
+            console.log('Analyzing');
+            g_backgroundEngine.postMessage("analyze");
+        } else {
+            console.log('Cant analyze: engine is broken');
+        }
+    }
+    
     engine.moveFound = null;
 
     InitializeBackgroundEngine();
 })(bot);
 
 bot.moveFound = function (move) {
-    $('.title.bottom-4').text('I suggest: '  + move);
+    $('#robot_message').text('I suggest: '  + move);
 };
 
 $(document).ready(function() {
-    $('.title.bottom-4').before('<a href="https://github.com/recoders/chrome-bot" title="Open source"><img style="float: left;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chrome-bot/master/images/robot-20.png" /></a>');
-    var fen = bot.getCurrentFen();
-    bot.makeMove(fen);
-});
+    $('#top_bar_settings').after('<span id="robot_message" style="color: #fff; float: right; margin-right: 10px;">Robot message</span>'
+        + '<a href="https://github.com/recoders/chrome-bot" title="Open source">' 
+        + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chrome-bot/master/images/robot-20.png" /></a>');
+    if (window.location.pathname === '/live') {
+        
+        $('#robot_message').on('click', function() {
+            bot.analyze();
+        });
+        
+        // Live chess version
+        MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+        var observer = new MutationObserver(function(mutations, observer) {
+            // fired when a mutation occurs
+            console.log(mutations, observer);
+            var movesContainer = mutations[0].target;
+            bot.makeLiveMove(movesContainer);
+        });
 
-chrome.runtime.onMessage.addListener(function(request, data, sendResponse) {
-
-    switch (request) {
-        case CMD_START_BOT:
-            var fen = bot.getCurrentFen();
-            bot.makeMove(fen);
-            break;
+        var movesList = $('.dijitVisible #moves div.notation')[0];
+        observer.observe(movesList, {
+          subtree: true,
+          attributes: false,
+          childList: true,
+        });
+        
+        bot.makeLiveMove(movesList);
+        
+    } else {
+        // Online chess version
+        var fen = bot.getCurrentFen();
+        bot.makeMove(fen);
     }
-
 });
