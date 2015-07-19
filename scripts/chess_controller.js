@@ -10,7 +10,7 @@ var bot = {};
     
     function init (afterInit) {
         try {
-        $.get("https://raw.githubusercontent.com/recoders/chrome-bot/master/scripts/garbochess-m.js", {},
+        $.get("https://raw.githubusercontent.com/recoders/chess-bot/master/scripts/garbochess-m.js", {},
             function (workerCode) {
                 blob = new Blob([workerCode], {type : 'javascript/worker'});
                 if (afterInit) {
@@ -155,8 +155,8 @@ var bot = {};
 
 $(document).ready(function() {
     $('#top_bar_settings').after('<span id="robot_message" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
-        + '<a href="https://github.com/recoders/chrome-bot" title="Open source">' 
-        + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chrome-bot/master/images/robot-20.png" /></a>');
+        + '<a href="https://github.com/recoders/chess-bot" title="Open source">' 
+        + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chess-bot/master/images/robot-20.png" /></a>');
     if (window.location.pathname === '/live') {
         // Live chess version
         bot.moveFound = function (move) {
@@ -198,7 +198,7 @@ $(document).ready(function() {
         
     } else {
         // eChess version
-        $('.title.bottom-4').before('<img style="float: left;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chrome-bot/master/images/robot-20.png" /></a>');
+        $('.title.bottom-4').before('<img style="float: left;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chess-bot/master/images/robot-20.png" /></a>');
         bot.moveFound = function (move) {
             $('.title.bottom-4').text('I suggest: '  + move);
         }
