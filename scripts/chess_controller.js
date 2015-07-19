@@ -171,11 +171,16 @@ $(document).ready(function() {
         MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
         var observer = new MutationObserver(function(mutations, observer) {
             // fired when a mutation occurs
-            if ($('.dijitVisible #moves div.notation').length > 0) {
-                // TODO: add check for duplicated running when moves count does not changed.
-                $('#robot_message').text('Thinking...');
-                // Possible new at each fire.
-                bot.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
+            var currentMovesCount = $('.dijitVisible #moves div.notation .gotomove').filter(function () {
+                return !!this.innerText;
+            }).length;
+            if (currentMovesCount > 0) {
+                if (currentMovesCount !== previousMovesCount) {
+                    previousMovesCount = currentMovesCount;
+                    $('#robot_message').text('Thinking...');
+                    // Possible new at each fire.
+                    bot.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
+                }
             } else {
                 $('#robot_message').text('Hi there!');
             }
@@ -187,7 +192,7 @@ $(document).ready(function() {
           childList: true,
         });
         
-        bot.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
+        // bot.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
         
     } else {
         // eChess version
