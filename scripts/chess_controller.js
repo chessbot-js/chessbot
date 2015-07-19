@@ -53,7 +53,9 @@ var bot = {};
                             // Ready Move
                             var move = e.data.substr(e.data.lastIndexOf('NPS:'));
                             move = move.substr(move.indexOf(' ') + 2);
-                            move = move.substr(0, move.indexOf(' '));
+                            if (move.indexOf(' ') > -1) {
+                                move = move.substr(0, move.indexOf(' '));
+                            }
                             MakeMove(move);
                         } else if (e.data.match("^message") == "message") {
                             EnsureAnalysisStopped();
