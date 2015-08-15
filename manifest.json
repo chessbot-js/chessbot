@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
   "name": "__MSG_appName__",
-  "version": "0.3",
+  "version": "0.3.1",
   "description": "__MSG_appDescription__",
-  "homepage_url": "https://github.com/recoders/chess-bot",
+  "homepage_url": "http://re-coders.com/chessbot",
   "default_locale": "en",
   "icons": {
     "128": "images/favicon-128x128.png",
@@ -15,7 +15,8 @@
         "scripts/chess_controller.js"
     ],
     "matches": [ "http://*.chess.com/echess/game?id=*", "https://*.chess.com/echess/game?id=*",
-        "http://*.chess.com/live?v=*", "https://*.chess.com/live?v=*" ]
+        "http://*.chess.com/live?v=*", "https://*.chess.com/live?v=*",
+        "http://*.chess.com/simple?v=*", "https://*.chess.com/simple?v=*"]
   } ],
   "permissions": [
     "declarativeContent"
