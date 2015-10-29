@@ -3,6 +3,8 @@
 var bot = {};
 
 (function(engine){
+    var b_console = console || { log : function (a) { ; } };
+    
     var g_backgroundEngineValid = true;
     var g_backgroundEngine;
     var g_analyzing = false;
@@ -25,12 +27,12 @@ var bot = {};
             function (workerCode) {
                 blob = new Blob([workerCode], {type : 'javascript/worker'});
                 if (afterInit) {
-                    console.log('Chess engine load correctly.');
+                    b_console.log('Chess engine load correctly.');
                     afterInit();
                 }
             });
         } catch (error) {
-            console.log('Chess engine not load correctly.');
+            b_console.log('Chess engine not load correctly.');
             g_backgroundEngineValid = false;
         }
     };
@@ -66,6 +68,9 @@ var bot = {};
                             move = move.substr(move.indexOf(' ') + 2);
                             if (move.indexOf(' ') > -1) {
                                 move = move.substr(0, move.indexOf(' '));
+                            }
+                            if (move == 'heckmate') {
+                                move = 'Checkmate';
                             }
                             MakeMove(move);
                         } else if (e.data.match("^message") == "message") {
@@ -126,16 +131,16 @@ var bot = {};
         if (g_backgroundEngine) {
             g_backgroundEngine.postMessage(move);
         } else { 
-            console.error('Engine is stopped. Suggestion cant be possible in live mode without working engine.');
+            b_console.error('Engine is stopped. Suggestion cant be possible in live mode without working engine.');
         };
     };
 
     function analyze() {
         if (g_backgroundEngine) {
-            console.log('Analyzing');
+            b_console.log('Analyzing');
             g_backgroundEngine.postMessage("analyze");
         } else {
-            console.log('Cant analyze: engine is stopped.');
+            b_console.log('Cant analyze: engine is stopped.');
         }
     };
     
@@ -167,12 +172,12 @@ $(document).ready(function() {
     if (window.location.pathname === '/live' || window.location.pathname === '/simple') {
         if (window.location.pathname === '/simple') {
             $('.more').parent().after('<li><span id="robot_message" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
-                + '<a href="http://re-coders.com/chessbot" title="Open source">' 
+                + '<a id="robot_link" style="background-color: #5d873b;" href="http://re-coders.com/chessbot" title="Switch robot on/off. To open source - right click, then open in new tab.">' 
                 + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
                 + '</a></li>');
         } else {
             $('#top_bar_settings').after('<span id="robot_message" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
-                + '<a href="http://re-coders.com/chessbot" title="Open source">' 
+                + '<a id="robot_link" href="http://re-coders.com/chessbot" title="Switch on/off. To open source - right click, then open in new tab.">' 
                 + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>');
         }
         // Live chess version
@@ -184,6 +189,20 @@ $(document).ready(function() {
             .css('cursor', 'pointer')
             .on('click', function() {
                 bot.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
+            });
+        
+        $('#robot_link')
+            .on('click', function(e) {
+                $('#robot_message').toggle();
+                $this = $(this);
+                if ($this.hasClass('norobot')) {
+                    $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
+                    $this.removeClass('norobot');
+                } else {
+                    $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
+                    $this.addClass('norobot');
+                }
+                return false;
             });
         
         var previousMovesCount = 0;
