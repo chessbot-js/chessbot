@@ -166,6 +166,33 @@ var bot = {};
     init(InitializeBackgroundEngine);
 })(bot);
 
+var cookie = {};
+(function(cookieMonster){
+    cookieMonster.get = function ( name ) {
+        var cSIndex = document.cookie.indexOf( name );
+        if (cSIndex == -1) return false;
+        cSIndex = document.cookie.indexOf( name + "=" )
+        if (cSIndex == -1) return false;
+        var cEIndex = document.cookie.indexOf( ";", cSIndex + ( name + "=" ).length );
+        if (cEIndex == -1) cEIndex = document.cookie.length;
+        return document.cookie.substring( cSIndex + ( name + "=" ).length, cEIndex );
+    };
+
+    cookieMonster.del = function ( name ) {
+        if ( getCookie( name )) {
+            document.cookie = name + "=; expires=Thu, 01-Jan-70 00:00:01 GMT";
+        }
+    };
+
+    cookieMonster.set = function ( name, value, expire ) {
+        time = new Date();
+        time.setTime( time.getTime() + expire );
+        document.cookie = name + "=" + value + "; expires=" + time.toGMTString();
+        return true;
+    };
+
+
+})(cookie);
 
 
 $(document).ready(function() {
@@ -231,9 +258,47 @@ $(document).ready(function() {
         });
         
     } else {
+        var eChessCookie = 'chessbot-echess-enabled';
+        
         // eChess version
         $('.title.bottom-4')
-            .before('<img style="float: left;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>');
+            .before($('<img>', {
+                'id': 'robot_icon',
+                'style': 'float: left; cursor: pointer;',
+                'alt': 'ChessBot icon',
+                'src': 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png',
+                'title': 'Click me to enable/disable bot suggestions.'
+            }));
+
+        $('#robot_icon')
+            .on('click', function(e) {
+                $('.title.bottom-4').toggle();
+                var $this = $(this);
+                if ($this.hasClass('norobot')) {
+                    $this.attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
+                    $this.removeClass('norobot');
+                    cookie.set(eChessCookie, '1');
+                } else {
+                    $this.attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
+                    $this.addClass('norobot');
+                    cookie.set(eChessCookie, '0');
+                }
+                return false;
+            });
+        
+        (function(){
+            var $this = $('#robot_icon');
+            if (cookie.get(eChessCookie) == '0') {
+                $this.attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
+                $this.addClass('norobot');
+                $('.title.bottom-4').hide();
+            } else {
+                $this.attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
+                $this.removeClass('norobot');
+                $('.title.bottom-4').show();
+            }
+        })();        
+        
         bot.moveFound = function (move) {
             $('.title.bottom-4').text('I suggest: '  + move);
         };
