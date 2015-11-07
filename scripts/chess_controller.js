@@ -262,6 +262,8 @@ $(document).ready(function() {
         
         // eChess version
         $('.title.bottom-4')
+            .before('<div id="robot_notice" title="Click me to enable/disable bot suggestions." class="notice bottom-8" style="cursor: pointer; height: 20px;"><span id="robot_text"></span></div>');
+        $('#robot_text')
             .before($('<img>', {
                 'id': 'robot_icon',
                 'style': 'float: left; cursor: pointer;',
@@ -270,37 +272,37 @@ $(document).ready(function() {
                 'title': 'Click me to enable/disable bot suggestions.'
             }));
 
-        $('#robot_icon')
+        $('#robot_notice')
             .on('click', function(e) {
-                $('.title.bottom-4').toggle();
+                $('#robot_text').toggle();
                 var $this = $(this);
                 if ($this.hasClass('norobot')) {
-                    $this.attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
-                    $this.removeClass('norobot');
+                    $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
+                    $this.removeClass('norobot').addClass('success');
                     cookie.set(eChessCookie, '1');
                 } else {
-                    $this.attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
-                    $this.addClass('norobot');
+                    $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
+                    $this.addClass('norobot').removeClass('success');
                     cookie.set(eChessCookie, '0');
                 }
                 return false;
             });
         
         (function(){
-            var $this = $('#robot_icon');
+            var $this = $('#robot_notice');
             if (cookie.get(eChessCookie) == '0') {
-                $this.attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
-                $this.addClass('norobot');
-                $('.title.bottom-4').hide();
+                $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
+                $this.addClass('norobot').removeClass('success');
+                $('#robot_text').hide();
             } else {
-                $this.attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
-                $this.removeClass('norobot');
-                $('.title.bottom-4').show();
+                $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
+                $this.removeClass('norobot').addClass('success');
+                $('#robot_text').show();
             }
         })();        
         
         bot.moveFound = function (move) {
-            $('.title.bottom-4').text('I suggest: '  + move);
+            $('#robot_text').text('I suggest: '  + move);
         };
         var fen = bot.getCurrentFen();
         bot.makeMove(fen);
