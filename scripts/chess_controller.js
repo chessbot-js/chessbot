@@ -1,7 +1,7 @@
 /* global chrome, CMD_START_BOT, bot */
 
 var bot = {};
-var bot_enable_debug =  false;
+var bot_enable_debug =  true;
 
 (function(engine, $){
     var b_console = { log : function (a) { ; } };
@@ -27,7 +27,7 @@ var bot_enable_debug =  false;
 
     function init (afterInit) {
         try {
-            $.get("https://raw.githubusercontent.com/recoders/chessbot/master/scripts/garbochess-m.js", {},
+            $.get("https://raw.githubusercontent.com/recoders/chessbot/master/scripts/garbochess-b.js", {},
                 function (workerCode) {
                     blob = new Blob([workerCode], {type : 'javascript/worker'});
                     if (afterInit) {
@@ -184,7 +184,7 @@ var cookie = {};
     };
 
     cookieMonster.set = function ( name, value, expire ) {
-        time = new Date();
+        var time = new Date();
         time.setTime( time.getTime() + expire );
         document.cookie = name + "=" + value + "; expires=" + time.toGMTString();
         return true;
@@ -194,12 +194,32 @@ var cookie = {};
 })(cookie);
 
 var pageManager = {};
-(function(page, $, window){
+(function(page, $, window, cookieManager){
     page = page || {};
     const CURRENT_BOT_STANDART = 'bot_standart';
     const CURRENT_BOT_LIVE = 'bot_live';
     const CURRENT_BOT_SIMPLE = 'bot_simple';
     var currentBot = CURRENT_BOT_STANDART;
+    var enableSuggestion = true;
+    var eChessCookie = 'chessbot-echess-enabled';
+    var liveChessCookie = 'chessbot-live-enabled';
+
+    function toggleSuggestionLive(element) {
+        enableSuggestion = !enableSuggestion;
+        if (enableSuggestion) {
+            $('#robot_message').show();
+            $(element).children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
+            $pinkSquare.show();
+            $pinkSquare2.show();
+            cookieManager.set(liveChessCookie, '1');
+        } else {
+            $('#robot_message').hide();
+            $(element).children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
+            $pinkSquare.hide();
+            $pinkSquare2.hide();
+            cookieManager.set(liveChessCookie, '0');
+        }
+    }
 
     function livePagePreparations(engine) {
         // Robot icon actions
@@ -211,15 +231,7 @@ var pageManager = {};
 
         $('#robot_link')
             .on('click', function(e) {
-                $('#robot_message').toggle();
-                $this = $(this);
-                if ($this.hasClass('norobot')) {
-                    $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
-                    $this.removeClass('norobot');
-                } else {
-                    $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
-                    $this.addClass('norobot');
-                }
+                toggleSuggestionLive(this);
                 return false;
             });
 
@@ -247,38 +259,10 @@ var pageManager = {};
           attributes: false,
           childList: true
         });
-    }
 
-    function standartPagePreparations(engine) {
-        var eChessCookie = 'chessbot-echess-enabled';
-        $('#robot_notice')
-            .on('click', function(e) {
-                $('#robot_text').toggle();
-                var $this = $(this);
-                if ($this.hasClass('norobot')) {
-                    $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
-                    $this.removeClass('norobot').addClass('success');
-                    cookie.set(eChessCookie, '1');
-                } else {
-                    $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
-                    $this.addClass('norobot').removeClass('success');
-                    cookie.set(eChessCookie, '0');
-                }
-                return false;
-            });
-
-        (function(){
-            var $this = $('#robot_notice');
-            if (cookie.get(eChessCookie) == '0') {
-                $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
-                $this.addClass('norobot').removeClass('success');
-                $('#robot_text').hide();
-            } else {
-                $this.children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
-                $this.removeClass('norobot').addClass('success');
-                $('#robot_text').show();
-            }
-        })();
+        // And go!
+        // enableSuggestion = false; // Fix trouble with cookie removing after refresh. // cookieManager.get(liveChessCookie) == '0';
+        // toggleSuggestionLive($('#robot_link')[0]);
     }
 
     page.createLiveBot = function (botEngine) {
@@ -296,6 +280,32 @@ var pageManager = {};
             + '</a></li>');
         currentBot = CURRENT_BOT_SIMPLE;
         livePagePreparations(botEngine);
+    }
+
+    function toggleSuggestionStandart(control) {
+        enableSuggestion = !enableSuggestion;
+        if (enableSuggestion) {
+            $('#robot_text').show();
+            $(control).addClass('success')
+                .children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
+            cookie.set(eChessCookie, '1');
+        } else {
+            $('#robot_text').hide();
+            $(control).removeClass('success')
+                .children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
+            cookie.set(eChessCookie, '0');
+        }
+    }
+
+    function standartPagePreparations(engine) {
+        $('#robot_notice')
+            .on('click', function(e) {
+                toggleSuggestionStandart(this);
+                return false;
+            });
+
+        enableSuggestion = cookieManager.get(eChessCookie) == '0';
+        toggleSuggestionStandart($('#robot_notice')[0]);
     }
 
     page.createStandartBot = function (botEngine) {
@@ -371,18 +381,22 @@ var pageManager = {};
     }
 
     page.showMove = function (data) {
-        move = (data || {}).nextMove;
         if (currentBot == CURRENT_BOT_STANDART) {
-            $('#robot_text').text('I suggest: '  + move.nextMove);
+            var move = move = (data || {}).nextMove;
+            $('#robot_text').text('I suggest: '  + move);
         } else {
             // Live and simple version are same
+            var move = (data || {}).nextMove;
             $('#robot_message').text('I suggest: '  + (move != '' ? move : ' : nothing =('));
-            madeMachineMove(data.machineMove);
+            if (enableSuggestion) {
+                madeMachineMove(data.machineMove);
+            }
         }
     }
 
-})(pageManager, jQuery, this);
+})(pageManager, jQuery, this, cookie);
 
+// Startup code
 $(document).ready(function() {
     if (window.location.pathname === '/live' || window.location.pathname === '/simple') {
         if (window.location.pathname === '/simple') {
@@ -390,7 +404,6 @@ $(document).ready(function() {
         } else {
             pageManager.createLiveBot(bot);
         }
-
         bot.moveFound = pageManager.showMove;
 
     } else {
