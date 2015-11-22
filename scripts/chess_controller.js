@@ -1,9 +1,13 @@
 /* global chrome, CMD_START_BOT, bot */
 
 var bot = {};
+var bot_enable_debug =  false;
 
 (function(engine, $){
-    var b_console = console || { log : function (a) { ; } };
+    var b_console = { log : function (a) { ; } };
+    if (bot_enable_debug && console) {
+        b_console =  console;
+    }
 
     var g_backgroundEngineValid = true;
     var g_backgroundEngine;
@@ -23,14 +27,13 @@ var bot = {};
 
     function init (afterInit) {
         try {
-        // $.get("https://raw.githubusercontent.com/recoders/chessbot/master/scripts/garbochess-m.js", {},
-        $.get("http://test.re-coders.com/garbochess.php", {},
-            function (workerCode) {
-                blob = new Blob([workerCode], {type : 'javascript/worker'});
-                if (afterInit) {
-                    b_console.log('Chess engine load correctly.');
-                    afterInit();
-                }
+            $.get("https://raw.githubusercontent.com/recoders/chessbot/master/scripts/garbochess-m.js", {},
+                function (workerCode) {
+                    blob = new Blob([workerCode], {type : 'javascript/worker'});
+                    if (afterInit) {
+                        b_console.log('Chess engine load correctly.');
+                        afterInit();
+                    }
             });
         } catch (error) {
             b_console.log('Chess engine not load correctly.');
@@ -67,7 +70,7 @@ var bot = {};
                             // Ready Move
                             var data_raw = e.data.replace('pv ', '');
                             var data = JSON.parse(data_raw);
-                            b_console.log(data.humanMoves);
+                            b_console.log('Next moves: ' + data.humanMoves);
                             MakeMove(data);
                         } else if (e.data.match("^message") == "message") {
                             EnsureAnalysisStopped();
@@ -199,6 +202,7 @@ var pageManager = {};
     var currentBot = CURRENT_BOT_STANDART;
 
     function livePagePreparations(engine) {
+        // Robot icon actions
         $('#robot_message')
             .css('cursor', 'pointer')
             .on('click', function() {
@@ -310,6 +314,62 @@ var pageManager = {};
         standartPagePreparations(botEngine);
     }
 
+
+    // Suggestion squares
+    var $pinkSquare = $('<div>', {
+        'id': 'pinkSquare',
+        'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: pink;',
+    });
+    var $pinkSquare2 = $('<div>', {
+        'id': 'pinkSquare',
+        'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: pink;',
+    });
+
+    function madeMachineMove(move) {
+        if (!move) return;
+        var fromSquare = move.substring(0,2);
+        var toSquare = move.substring(2,4);
+        // Find board container
+        var $boardContainer = $('.boardContainer').not('.visibilityHidden').not('.chess_com_hidden');
+        // Find board
+        var $board = $boardContainer.find('.chess_viewer');
+        // Calculate sizes
+        var boardHeight = $board.height();
+        var boardWidth = $board.width();
+        var pieceHeight = (boardHeight - 2) / 8;
+        var pieceWidth = (boardWidth - 2) / 8;
+        // Is flipped?
+        var is_flipped = $board.hasClass('chess_boardFlipped');
+        /*
+        // I keep this unusefull code to remember how can i made it fully automattic
+        $board.find('.chess_com_piece.pinked').css('background-color', '');
+        $board.find("img[id^=img_chessboard_][id$=_" + fromSquare+ "]").addClass('pinked').css('background-color', 'pink');
+        */
+        // Move pinkSquares to the right place
+        $boardArea = $board.find("div[id^=chessboard_][id$=_boardarea]");
+
+        function placeSquareToPoint($square, point) {
+            if (!is_flipped) {
+                var pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * point[1]) - 1; // 1 pixel from border
+                var pinkLeft = $boardArea[0].offsetLeft + pieceWidth * (point.charCodeAt(0) - 97) + 1; // 'a'.charCodeAt(0) == 97
+            } else {
+                var pinkTop = $boardArea[0].offsetTop + (pieceHeight * (point[1] - 1)) + 1; // 1 pixel from border
+                var pinkLeft = $boardArea[0].offsetLeft + (boardWidth - pieceWidth * (point.charCodeAt(0) - 96)) - 1; // 'a'.charCodeAt(0) == 97
+            }
+
+            $square.css({
+                    'width': pieceWidth + 'px',
+                    'height': pieceHeight + 'px',
+                    'top': pinkTop + 'px',
+                    'left': pinkLeft + 'px'
+                });
+            $square.appendTo($board);
+        }
+
+        placeSquareToPoint($pinkSquare, fromSquare);
+        placeSquareToPoint($pinkSquare2, toSquare);
+    }
+
     page.showMove = function (data) {
         move = (data || {}).nextMove;
         if (currentBot == CURRENT_BOT_STANDART) {
@@ -317,6 +377,7 @@ var pageManager = {};
         } else {
             // Live and simple version are same
             $('#robot_message').text('I suggest: '  + (move != '' ? move : ' : nothing =('));
+            madeMachineMove(data.machineMove);
         }
     }
 
