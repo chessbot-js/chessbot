@@ -3,5 +3,5 @@
 .gitignore export-ignore
 
 scripts/garbochess-* export-ignore
-LISENCE export-ignore
+LICENSE export-ignore
 README.md export-ignore
