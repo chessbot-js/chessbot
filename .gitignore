@@ -10,11 +10,3 @@ nbdist/
 nbactions.xml
 nb-configuration.xml
 .nb-gradle/
-
-# Do not include in release
-.gitattributes export-ignore
-.gitignore export-ignore
-
-scripts/garbochess-* export-ignore
-LISENCE export-ignore
-README.md export-ignore
