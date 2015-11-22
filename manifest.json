@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "__MSG_appName__",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "__MSG_appDescription__",
   "homepage_url": "http://re-coders.com/chessbot",
   "default_locale": "en",
@@ -10,7 +10,7 @@
     "512": "images/favicon-512x512.png"
   },
   "content_scripts": [ {
-    "js": [ 
+    "js": [
         "scripts/jquery-2.0.3.js",
         "scripts/chess_controller.js"
     ],

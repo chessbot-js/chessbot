@@ -2,9 +2,9 @@
 
 var bot = {};
 
-(function(engine){
+(function(engine, $){
     var b_console = console || { log : function (a) { ; } };
-    
+
     var g_backgroundEngineValid = true;
     var g_backgroundEngine;
     var g_analyzing = false;
@@ -14,7 +14,7 @@ var bot = {};
      var element = document.getElementById(request.query);
      dispatchMouseEvent(element, 'click', true, true);
     */
-    
+
     var dispatchMouseEvent = function(target, var_args) {
             var e = document.createEvent("MouseEvents");
             e.initEvent.apply(e, Array.prototype.slice.call(arguments, 1));
@@ -23,7 +23,8 @@ var bot = {};
 
     function init (afterInit) {
         try {
-        $.get("https://raw.githubusercontent.com/recoders/chessbot/master/scripts/garbochess-m.js", {},
+        // $.get("https://raw.githubusercontent.com/recoders/chessbot/master/scripts/garbochess-m.js", {},
+        $.get("http://test.re-coders.com/garbochess.php", {},
             function (workerCode) {
                 blob = new Blob([workerCode], {type : 'javascript/worker'});
                 if (afterInit) {
@@ -36,14 +37,14 @@ var bot = {};
             g_backgroundEngineValid = false;
         }
     };
-    
+
     function EnsureAnalysisStopped() {
         if (g_analyzing && g_backgroundEngine != null) {
             g_backgroundEngine.terminate();
             g_backgroundEngine = null;
         }
     }
-    
+
     function MakeMove(move) {
         if (engine.moveFound != null) {
             engine.moveFound(move);
@@ -64,15 +65,10 @@ var bot = {};
                     g_backgroundEngine.onmessage = function (e) {
                         if (e.data.match("^pv") == "pv") {
                             // Ready Move
-                            var move = e.data.substr(e.data.lastIndexOf('NPS:'));
-                            move = move.substr(move.indexOf(' ') + 2);
-                            if (move.indexOf(' ') > -1) {
-                                move = move.substr(0, move.indexOf(' '));
-                            }
-                            if (move == 'heckmate') {
-                                move = 'Checkmate';
-                            }
-                            MakeMove(move);
+                            var data_raw = e.data.replace('pv ', '');
+                            var data = JSON.parse(data_raw);
+                            b_console.log(data.humanMoves);
+                            MakeMove(data);
                         } else if (e.data.match("^message") == "message") {
                             EnsureAnalysisStopped();
                         } else {
@@ -93,24 +89,24 @@ var bot = {};
 
         return g_backgroundEngineValid;
     }
-    
+
     engine.getCurrentFen = function () {
         return $('.moveactions input').val();
     };
-    
+
     engine.makeMove = function (fen) {
         if (g_backgroundEngine) {
             g_backgroundEngine.postMessage("position " + fen);
             g_backgroundEngine.postMessage("analyze");
-      
-        } else { 
+
+        } else {
             InitializeBackgroundEngine(function(){
                 g_backgroundEngine.postMessage("position " + fen);
                 g_backgroundEngine.postMessage("analyze");
             });
         };
     };
-    
+
     // Live moves
     var movesMaded = 0;
     var getNextMove = function (movesContainer) {
@@ -130,20 +126,20 @@ var bot = {};
     function regularMove (move) {
         if (g_backgroundEngine) {
             g_backgroundEngine.postMessage(move);
-        } else { 
+        } else {
             b_console.error('Engine is stopped. Suggestion cant be possible in live mode without working engine.');
         };
     };
 
     function analyze() {
         if (g_backgroundEngine) {
-            b_console.log('Analyzing');
+            b_console.log('Analyzing started.');
             g_backgroundEngine.postMessage("analyze");
         } else {
             b_console.log('Cant analyze: engine is stopped.');
         }
     };
-    
+
     engine.makeLiveSuggest = function (movesContainer) {
         // Terminate engine
         if (g_backgroundEngine != null) {
@@ -160,11 +156,11 @@ var bot = {};
             analyze();
         });
     };
-    
+
     engine.moveFound = null;
 
     init(InitializeBackgroundEngine);
-})(bot);
+})(bot, jQuery);
 
 var cookie = {};
 (function(cookieMonster){
@@ -194,30 +190,21 @@ var cookie = {};
 
 })(cookie);
 
+var pageManager = {};
+(function(page, $, window){
+    page = page || {};
+    const CURRENT_BOT_STANDART = 'bot_standart';
+    const CURRENT_BOT_LIVE = 'bot_live';
+    const CURRENT_BOT_SIMPLE = 'bot_simple';
+    var currentBot = CURRENT_BOT_STANDART;
 
-$(document).ready(function() {
-    if (window.location.pathname === '/live' || window.location.pathname === '/simple') {
-        if (window.location.pathname === '/simple') {
-            $('.more').parent().after('<li><span id="robot_message" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
-                + '<a id="robot_link" style="background-color: #5d873b;" href="http://re-coders.com/chessbot" title="Switch robot on/off. To open source - right click, then open in new tab.">' 
-                + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
-                + '</a></li>');
-        } else {
-            $('#top_bar_settings').after('<span id="robot_message" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
-                + '<a id="robot_link" href="http://re-coders.com/chessbot" title="Switch on/off. To open source - right click, then open in new tab.">' 
-                + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>');
-        }
-        // Live chess version
-        bot.moveFound = function (move) {
-            $('#robot_message').text('I suggest: '  + (move != '' ? move : ' : nothing =('));
-        };
-
+    function livePagePreparations(engine) {
         $('#robot_message')
             .css('cursor', 'pointer')
             .on('click', function() {
-                bot.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
+                engine.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
             });
-        
+
         $('#robot_link')
             .on('click', function(e) {
                 $('#robot_message').toggle();
@@ -231,7 +218,7 @@ $(document).ready(function() {
                 }
                 return false;
             });
-        
+
         var previousMovesCount = 0;
         MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
         var observer = new MutationObserver(function(mutations, observer) {
@@ -244,7 +231,7 @@ $(document).ready(function() {
                     previousMovesCount = currentMovesCount;
                     $('#robot_message').text('Thinking...');
                     // Possible new at each fire.
-                    bot.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
+                    engine.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
                 }
             } else {
                 $('#robot_message').text('Hi there!');
@@ -256,22 +243,10 @@ $(document).ready(function() {
           attributes: false,
           childList: true
         });
-        
-    } else {
-        var eChessCookie = 'chessbot-echess-enabled';
-        
-        // eChess version
-        $('.title.bottom-4')
-            .before('<div id="robot_notice" title="Click me to enable/disable bot suggestions." class="notice bottom-8" style="cursor: pointer; height: 20px;"><span id="robot_text"></span></div>');
-        $('#robot_text')
-            .before($('<img>', {
-                'id': 'robot_icon',
-                'style': 'float: left; cursor: pointer;',
-                'alt': 'ChessBot icon',
-                'src': 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png',
-                'title': 'Click me to enable/disable bot suggestions.'
-            }));
+    }
 
+    function standartPagePreparations(engine) {
+        var eChessCookie = 'chessbot-echess-enabled';
         $('#robot_notice')
             .on('click', function(e) {
                 $('#robot_text').toggle();
@@ -287,7 +262,7 @@ $(document).ready(function() {
                 }
                 return false;
             });
-        
+
         (function(){
             var $this = $('#robot_notice');
             if (cookie.get(eChessCookie) == '0') {
@@ -299,11 +274,69 @@ $(document).ready(function() {
                 $this.removeClass('norobot').addClass('success');
                 $('#robot_text').show();
             }
-        })();        
-        
-        bot.moveFound = function (move) {
-            $('#robot_text').text('I suggest: '  + move);
-        };
+        })();
+    }
+
+    page.createLiveBot = function (botEngine) {
+        $('#top_bar_settings').after('<span id="robot_message" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
+            + '<a id="robot_link" href="http://re-coders.com/chessbot" title="Switch on/off. To open source - right click, then open in new tab.">'
+            + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>');
+        currentBot = CURRENT_BOT_LIVE;
+        livePagePreparations(botEngine);
+    }
+
+    page.createSimpleBot = function (botEngine) {
+        $('.more').parent().after('<li><span id="robot_message" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
+            + '<a id="robot_link" style="background-color: #5d873b;" href="http://re-coders.com/chessbot" title="Switch robot on/off. To open source - right click, then open in new tab.">'
+            + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
+            + '</a></li>');
+        currentBot = CURRENT_BOT_SIMPLE;
+        livePagePreparations(botEngine);
+    }
+
+    page.createStandartBot = function (botEngine) {
+        // eChess version
+        $('.title.bottom-4')
+            .before('<div id="robot_notice" title="Click me to enable/disable bot suggestions." class="notice bottom-8" style="cursor: pointer; height: 20px;"><span id="robot_text"></span></div>');
+        $('#robot_text')
+            .before($('<img>', {
+                'id': 'robot_icon',
+                'style': 'float: left; cursor: pointer;',
+                'alt': 'ChessBot icon',
+                'src': 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png',
+                'title': 'Click me to enable/disable bot suggestions.'
+            }));
+        currentBot = CURRENT_BOT_STANDART;
+        standartPagePreparations(botEngine);
+    }
+
+    page.showMove = function (data) {
+        move = (data || {}).nextMove;
+        if (currentBot == CURRENT_BOT_STANDART) {
+            $('#robot_text').text('I suggest: '  + move.nextMove);
+        } else {
+            // Live and simple version are same
+            $('#robot_message').text('I suggest: '  + (move != '' ? move : ' : nothing =('));
+        }
+    }
+
+})(pageManager, jQuery, this);
+
+$(document).ready(function() {
+    if (window.location.pathname === '/live' || window.location.pathname === '/simple') {
+        if (window.location.pathname === '/simple') {
+            pageManager.createSimpleBot(bot);
+        } else {
+            pageManager.createLiveBot(bot);
+        }
+
+        bot.moveFound = pageManager.showMove;
+
+    } else {
+
+        pageManager.createStandartBot();
+        bot.moveFound = pageManager.showMove;
+
         var fen = bot.getCurrentFen();
         bot.makeMove(fen);
     }
