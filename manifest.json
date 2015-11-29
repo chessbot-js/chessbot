@@ -1,13 +1,17 @@
 {
   "manifest_version": 2,
   "name": "__MSG_appName__",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "__MSG_appDescription__",
   "homepage_url": "http://re-coders.com/chessbot",
   "default_locale": "en",
   "icons": {
     "128": "images/favicon-128x128.png",
     "512": "images/favicon-512x512.png"
+  },
+  "background": {
+     "scripts": [ "scripts/background.js" ],
+     "persistent": false
   },
   "content_scripts": [ {
     "js": [
@@ -19,6 +23,7 @@
         "http://*.chess.com/simple?v=*", "https://*.chess.com/simple?v=*"]
   } ],
   "permissions": [
-    "declarativeContent"
+    "declarativeContent",
+    "tabs"
   ]
 }

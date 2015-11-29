@@ -1,7 +1,12 @@
 /* global chrome, CMD_START_BOT, bot */
 
 var bot = {};
-var bot_enable_debug =  true;
+var bot_enable_debug =  false;
+
+(function isDevMode() {
+    bot_enable_debug = !('update_url' in chrome.runtime.getManifest());
+})();
+
 
 (function(engine, $){
     var b_console = { log : function (a) { ; } };
