@@ -204,10 +204,13 @@ var pageManager = {};
     const CURRENT_BOT_STANDART = 'bot_standart';
     const CURRENT_BOT_LIVE = 'bot_live';
     const CURRENT_BOT_SIMPLE = 'bot_simple';
+    const CURRENT_BOT_COLOR_WHITE = 0;
+    const CURRENT_BOT_COLOR_BLACK = 1;
     var currentBot = CURRENT_BOT_STANDART;
     var enableSuggestion = true;
     var eChessCookie = 'chessbot-echess-enabled';
     var liveChessCookie = 'chessbot-live-enabled';
+    var currentColor = CURRENT_BOT_COLOR_WHITE;
 
     function toggleSuggestionLive(element) {
         enableSuggestion = !enableSuggestion;
@@ -249,6 +252,7 @@ var pageManager = {};
             }).length;
             if (currentMovesCount > 0) {
                 if (currentMovesCount !== previousMovesCount) {
+                    currentColor = currentMovesCount % 2 == 0 ? CURRENT_BOT_COLOR_WHITE : CURRENT_BOT_COLOR_BLACK;
                     previousMovesCount = currentMovesCount;
                     $('#robot_message').text('Thinking...');
                     // Possible new at each fire.
@@ -385,13 +389,22 @@ var pageManager = {};
         placeSquareToPoint($pinkSquare2, toSquare);
     }
 
-    page.showMove = function (data) {
+    page.showMove = function (data) {        
         if (currentBot == CURRENT_BOT_STANDART) {
-            var move = move = (data || {}).nextMove;
+            var move = (data || {}).nextMove;
             $('#robot_text').text('I suggest: '  + move);
         } else {
             // Live and simple version are same
             var move = (data || {}).nextMove;
+            var humanMoves = (data || {}).humanMoves; 
+            if (humanMoves != '') {
+                humanMoves = humanMoves.split(' ');
+                for (hm in humanMoves) {
+                    if (hm == 0) { continue; }
+                    humanMoves[hm] = ((parseInt(hm) + currentColor) % 2 == 0 ? '+' : '-') + humanMoves[hm];
+                }
+                move = humanMoves.slice(0,3).join(' ');
+            }
             $('#robot_message').text('I suggest: '  + (move != '' ? move : ' : nothing =('));
             if (enableSuggestion) {
                 madeMachineMove(data.machineMove);
