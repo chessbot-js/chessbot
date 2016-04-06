@@ -401,7 +401,7 @@ var pageManager = {};
                 humanMoves = humanMoves.split(' ');
                 for (hm in humanMoves) {
                     if (hm == 0) { continue; }
-                    humanMoves[hm] = ((parseInt(hm) + currentColor) % 2 == 0 ? '-' : '+') + humanMoves[hm];
+                    humanMoves[hm] = ((parseInt(hm) + currentColor) % 2 == 0 ? '+' : '-') + humanMoves[hm];
                 }
                 move = humanMoves.slice(0,3).join(' ');
             }
