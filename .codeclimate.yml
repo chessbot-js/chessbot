@@ -21,4 +21,7 @@ ratings:
   - "**.php"
   - "**.py"
   - "**.rb"
-exclude_paths: []
+exclude_paths: 
+  - "scripts/garbochess-m.js"
+  - "scripts/garbochess-b.js"
+  - "scripts/jquery-2.0.3.js"
