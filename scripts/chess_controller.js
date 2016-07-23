@@ -9,15 +9,15 @@ var bot_enable_debug =  false;
 
 
 (function(engine, $){
-    var b_console = { log : function (a) { ; } };
+    var b_console = { log : function (a) { } };
     if (bot_enable_debug && console) {
         b_console =  console;
     }
 
-    var g_backgroundEngineValid = true;
-    var g_backgroundEngine;
-    var g_analyzing = false;
-    var blob = null;
+    var g_backgroundEngineValid = true,
+        g_backgroundEngine,
+        g_analyzing = false,
+        blob = null;
 
     /*
      var element = document.getElementById(request.query);
@@ -44,7 +44,7 @@ var bot_enable_debug =  false;
             b_console.log('Chess engine not load correctly.');
             g_backgroundEngineValid = false;
         }
-    };
+    }
 
     function EnsureAnalysisStopped() {
         if (g_analyzing && g_backgroundEngine != null) {
@@ -137,7 +137,7 @@ var bot_enable_debug =  false;
         } else {
             b_console.error('Engine is stopped. Suggestion cant be possible in live mode without working engine.');
         };
-    };
+    }
 
     function analyze() {
         if (g_backgroundEngine) {
@@ -146,7 +146,7 @@ var bot_enable_debug =  false;
         } else {
             b_console.log('Cant analyze: engine is stopped.');
         }
-    };
+    }
 
     engine.makeLiveSuggest = function (movesContainer) {
         // Terminate engine
@@ -216,12 +216,14 @@ var pageManager = {};
         enableSuggestion = !enableSuggestion;
         if (enableSuggestion) {
             $('#robot_message').show();
+            $('#robot_enabled_message').text('Enabled');
             $(element).children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
             $pinkSquare.show();
             $pinkSquare2.show();
             cookieManager.set(liveChessCookie, '1');
         } else {
             $('#robot_message').hide();
+            $('#robot_enabled_message').text('Disabled');
             $(element).children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
             $pinkSquare.hide();
             $pinkSquare2.hide();
@@ -237,21 +239,20 @@ var pageManager = {};
                 engine.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
             });
 
-        $('#robot_link')
+        $('#robot_enabled_message')
             .on('click', function(e) {
                 toggleSuggestionLive(this);
                 return false;
             });
 
         var previousMovesCount = 0;
-        MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-        var observer = new MutationObserver(function(mutations, observer) {
+        function movesObserver () {
             // fired when a mutation occurs
             var currentMovesCount = $('.dijitVisible #moves div.notation .gotomove').filter(function () {
                 return !!this.innerText;
             }).length;
             if (currentMovesCount > 0) {
-                if (currentMovesCount !== previousMovesCount) {
+                if (currentMovesCount != previousMovesCount) {
                     currentColor = currentMovesCount % 2 == 0 ? CURRENT_BOT_COLOR_WHITE : CURRENT_BOT_COLOR_BLACK;
                     previousMovesCount = currentMovesCount;
                     $('#robot_message').text('Thinking...');
@@ -259,25 +260,25 @@ var pageManager = {};
                     engine.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
                 }
             } else {
-                $('#robot_message').text('Hi there!');
+                $('#robot_message').text('Game not available.');
             }
-        });
+        }
 
-        observer.observe($('#chess_boards')[0], {
-          subtree: true,
-          attributes: false,
-          childList: true
-        });
-
+        setInterval(movesObserver, 1000);
         // And go!
         // enableSuggestion = false; // Fix trouble with cookie removing after refresh. // cookieManager.get(liveChessCookie) == '0';
         // toggleSuggestionLive($('#robot_link')[0]);
+        
     }
-
+    
+    currentBot = CURRENT_BOT_LIVE;
+    
     page.createLiveBot = function (botEngine) {
-        $('#top_bar_settings').after('<span id="robot_message" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
-            + '<a id="robot_link" href="http://re-coders.com/chessbot" title="Switch on/off. To open source - right click, then open in new tab.">'
+        $('#top_bar_settings').after('<span id="robot_enabled_message" title="Switch on/off." style="cursor: pointer; color: #fff; float: right; margin-right: 10px;">Enabled</span>'
+            + '<a id="robot_link" href="http://re-coders.com/chessbot" target="_blank">'
             + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>');
+        $("#game_container_splitter").before('<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
+            + '<span id="robot_message" style="cursor: pointer;font-size: 20px;position: relative;top: -60px;left: 45px;"></span>');
         currentBot = CURRENT_BOT_LIVE;
         livePagePreparations(botEngine);
     }
@@ -337,28 +338,27 @@ var pageManager = {};
     // Suggestion squares
     var $pinkSquare = $('<div>', {
         'id': 'pinkSquare',
-        'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: pink;',
-    });
-    var $pinkSquare2 = $('<div>', {
+        'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: #7ef502;',
+    }), $pinkSquare2 = $('<div>', {
         'id': 'pinkSquare',
-        'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: pink;',
+        'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: #f55252;',
     });
 
     function madeMachineMove(move) {
         if (!move) return;
-        var fromSquare = move.substring(0,2);
-        var toSquare = move.substring(2,4);
-        // Find board container
-        var $boardContainer = $('.boardContainer').not('.visibilityHidden').not('.chess_com_hidden');
-        // Find board
-        var $board = $boardContainer.find('.chess_viewer');
-        // Calculate sizes
-        var boardHeight = $board.height();
-        var boardWidth = $board.width();
-        var pieceHeight = (boardHeight - 2) / 8;
-        var pieceWidth = (boardWidth - 2) / 8;
-        // Is flipped?
-        var is_flipped = $board.hasClass('chess_boardFlipped');
+        var fromSquare = move.substring(0,2),
+            toSquare = move.substring(2,4),
+            // Find board container
+            $boardContainer = $('.boardContainer').not('.visibilityHidden').not('.chess_com_hidden'),
+            // Find board
+            $board = $boardContainer.find('.chess_viewer'),
+            // Calculate sizes
+            boardHeight = $board.height(),
+            boardWidth = $board.width(),
+            pieceHeight = (boardHeight - 2) / 8,
+            pieceWidth = (boardWidth - 2) / 8,
+            // Is flipped?
+            is_flipped = $board.hasClass('chess_boardFlipped');
         /*
         // I keep this unusefull code to remember how can i made it fully automattic
         $board.find('.chess_com_piece.pinked').css('background-color', '');
@@ -388,11 +388,13 @@ var pageManager = {};
         placeSquareToPoint($pinkSquare, fromSquare);
         placeSquareToPoint($pinkSquare2, toSquare);
     }
+    
+    
 
     page.showMove = function (data) {        
         if (currentBot == CURRENT_BOT_STANDART) {
             var move = (data || {}).nextMove;
-            $('#robot_text').text('I suggest: '  + move);
+            $('#robot_text').text('Best move: '  + move);
         } else {
             // Live and simple version are same
             var move = (data || {}).nextMove;
@@ -401,11 +403,12 @@ var pageManager = {};
                 humanMoves = humanMoves.split(' ');
                 for (hm in humanMoves) {
                     if (hm == 0) { continue; }
-                    humanMoves[hm] = ((parseInt(hm) + currentColor) % 2 == 0 ? '+' : '-') + humanMoves[hm];
+                    humanMoves[hm] = ((parseInt(hm) + currentColor) % 2 == 0 ? '↑' : '↓') + humanMoves[hm];
                 }
-                move = humanMoves.slice(0,3).join(' ');
+                move = (currentColor % 2 == 0 ? '↑' : '↓') + humanMoves.slice(0,5).join(' ');
             }
-            $('#robot_message').text('I suggest: '  + (move != '' ? move : ' : nothing =('));
+            
+            $('#robot_message').text('Best move: '  + (move != '' ? move : ' : nothing =('));
             if (enableSuggestion) {
                 madeMachineMove(data.machineMove);
             }
@@ -420,7 +423,9 @@ $(document).ready(function() {
         if (window.location.pathname === '/simple') {
             pageManager.createSimpleBot(bot);
         } else {
-            pageManager.createLiveBot(bot);
+            setTimeout(function(){
+                pageManager.createLiveBot(bot);
+            }, 5000);
         }
         bot.moveFound = pageManager.showMove;
 
