@@ -2,7 +2,7 @@
 [![Code Climate](https://codeclimate.com/github/recoders/chessbot/badges/gpa.svg)](https://codeclimate.com/github/recoders/chessbot)
 
 It's a bot for Chess.com. It realised as google chrome extension and can be used 
-with any chrome-like browsers to win your motherfucking opponent.
+with any chrome-like browsers to win your opponent.
 
 Link to Chrome Store: 
 
