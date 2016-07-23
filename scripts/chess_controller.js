@@ -1,15 +1,10 @@
 /* global chrome, CMD_START_BOT, bot */
 
-var bot = {};
-var bot_enable_debug =  false;
-
-(function isDevMode() {
-    bot_enable_debug = !('update_url' in chrome.runtime.getManifest());
-})();
-
-
-(function(engine, $){
-    var b_console = { log : function (a) { } };
+var Bot = function ($) {
+    var engine = {},
+        b_console = { log : function (a) { } },
+        bot_enable_debug = !('update_url' in chrome.runtime.getManifest());
+    
     if (bot_enable_debug && console) {
         b_console =  console;
     }
@@ -112,23 +107,22 @@ var bot_enable_debug =  false;
                 g_backgroundEngine.postMessage("position " + fen);
                 g_backgroundEngine.postMessage("analyze");
             });
-        };
+        }
     };
 
     // Live moves
     var movesMaded = 0;
-    var getNextMove = function (movesContainer) {
-        var move = null;
-        var children = $(movesContainer).children();
-        if (children.length > 0) {
-            children.find('.gotomove').each(function(i, o){
-                if (i === movesMaded && o.innerText !== '') {
-                    move = o.innerText;
+    var getNextMove = function (movesArray) {
+        if (movesArray.length > 0) {
+            for(var i = 0; i < movesArray.length; i++) {
+                if (i === movesMaded && movesArray[i].innerText !== '' && movesArray[i].innerText.indexOf('0') === -1) {
+                    movesMaded++;
+                    // b_console.log("Move: " + move);
+                    return movesArray[i].innerText;
                 }
-            });
-            movesMaded++;
+            }
         }
-        return move;
+        return false;
     };
 
     function regularMove (move) {
@@ -136,7 +130,7 @@ var bot_enable_debug =  false;
             g_backgroundEngine.postMessage(move);
         } else {
             b_console.error('Engine is stopped. Suggestion cant be possible in live mode without working engine.');
-        };
+        }
     }
 
     function analyze() {
@@ -148,7 +142,7 @@ var bot_enable_debug =  false;
         }
     }
 
-    engine.makeLiveSuggest = function (movesContainer) {
+    engine.makeLiveSuggest = function (movesArray) {
         // Terminate engine
         if (g_backgroundEngine != null) {
             g_backgroundEngine.terminate();
@@ -156,10 +150,10 @@ var bot_enable_debug =  false;
         }
         InitializeBackgroundEngine(function(){
             movesMaded = 0;
-            var nextMove = getNextMove(movesContainer);
+            var nextMove = getNextMove(movesArray);
             while (nextMove) {
                 regularMove(nextMove);
-                nextMove = getNextMove(movesContainer);
+                nextMove = getNextMove(movesArray);
             }
             analyze();
         });
@@ -168,10 +162,13 @@ var bot_enable_debug =  false;
     engine.moveFound = null;
 
     init(InitializeBackgroundEngine);
-})(bot, jQuery);
+    
+    return engine;
+}
+bot = new Bot(jQuery);
 
-var cookie = {};
-(function(cookieMonster){
+var CookieMonster = function () {
+    var cookieMonster = {};
     cookieMonster.get = function ( name ) {
         var cSIndex = document.cookie.indexOf( name );
         if (cSIndex == -1) return false;
@@ -194,23 +191,24 @@ var cookie = {};
         document.cookie = name + "=" + value + "; expires=" + time.toGMTString();
         return true;
     };
+    
+    return cookieMonster;
+}
+var cookie = new CookieMonster();
 
-
-})(cookie);
-
-var pageManager = {};
-(function(page, $, window, cookieManager){
-    page = page || {};
+var PageManager = function($, window, cookieManager){
+    var page = page || {};
     const CURRENT_BOT_STANDART = 'bot_standart';
     const CURRENT_BOT_LIVE = 'bot_live';
     const CURRENT_BOT_SIMPLE = 'bot_simple';
     const CURRENT_BOT_COLOR_WHITE = 0;
     const CURRENT_BOT_COLOR_BLACK = 1;
-    var currentBot = CURRENT_BOT_STANDART;
-    var enableSuggestion = true;
-    var eChessCookie = 'chessbot-echess-enabled';
-    var liveChessCookie = 'chessbot-live-enabled';
-    var currentColor = CURRENT_BOT_COLOR_WHITE;
+    var currentBot = CURRENT_BOT_STANDART,
+        enableSuggestion = true,
+        eChessCookie = 'chessbot-echess-enabled',
+        liveChessCookie = 'chessbot-live-enabled',
+        currentColor = CURRENT_BOT_COLOR_WHITE,
+        isBetaDesign = false;
 
     function toggleSuggestionLive(element) {
         enableSuggestion = !enableSuggestion;
@@ -232,14 +230,19 @@ var pageManager = {};
     }
 
     function livePagePreparations(engine) {
+        // TODO: Special code for observing
+        var targets = isBetaDesign ? '.game-controls.game.playing div.notationVertical a.gotomove' : '.dijitVisible #moves div.notation .gotomove';
         // Robot icon actions
         $('#robot_message')
             .css('cursor', 'pointer')
             .on('click', function() {
-                engine.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
+                engine.makeLiveSuggest($(targets));
             });
-
-        $('#robot_enabled_message')
+        
+        var clickTarget = '#robot_enabled_message';
+        if (isBetaDesign) { clickTarget = "#robot_icon"; }
+        
+        $(clickTarget)
             .on('click', function(e) {
                 toggleSuggestionLive(this);
                 return false;
@@ -248,7 +251,7 @@ var pageManager = {};
         var previousMovesCount = 0;
         function movesObserver () {
             // fired when a mutation occurs
-            var currentMovesCount = $('.dijitVisible #moves div.notation .gotomove').filter(function () {
+            var currentMovesCount = $(targets).filter(function () {
                 return !!this.innerText;
             }).length;
             if (currentMovesCount > 0) {
@@ -257,7 +260,8 @@ var pageManager = {};
                     previousMovesCount = currentMovesCount;
                     $('#robot_message').text('Thinking...');
                     // Possible new at each fire.
-                    engine.makeLiveSuggest($('.dijitVisible #moves div.notation')[0]);
+                    // var subtargetName = isBetaDesign ? '.dijitVisible #moves div.notation' : '.dijitVisible #moves div.notation';
+                    engine.makeLiveSuggest($(targets));
                 }
             } else {
                 $('#robot_message').text('Game not available.');
@@ -273,12 +277,24 @@ var pageManager = {};
     
     currentBot = CURRENT_BOT_LIVE;
     
-    page.createLiveBot = function (botEngine) {
-        $('#top_bar_settings').after('<span id="robot_enabled_message" title="Switch on/off." style="cursor: pointer; color: #fff; float: right; margin-right: 10px;">Enabled</span>'
-            + '<a id="robot_link" href="http://re-coders.com/chessbot" target="_blank">'
-            + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>');
-        $("#game_container_splitter").before('<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
-            + '<span id="robot_message" style="cursor: pointer;font-size: 20px;position: relative;top: -60px;left: 45px;"></span>');
+    page.createLiveBot = function (botEngine, isBeta) {
+        isBetaDesign = isBeta == true;
+        if (!isBeta) {
+            $('#top_bar_settings').after('<span id="robot_enabled_message" title="Switch on/off." style="cursor: pointer; color: #fff; float: right; margin-right: 10px;">Enabled</span>'
+                + '<a id="robot_link" href="http://re-coders.com/chessbot" target="_blank">'
+                + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>');
+            $("#game_container_splitter").before('<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
+                + '<span id="robot_message" style="cursor: pointer;font-size: 20px;position: relative;top: -60px;left: 45px;"></span>');
+        } else {
+            $('ul.nav-vertical').append('<li nav-item-hide="">'
+                                        + '<a id="robot_icon" class="list-item" href="http://re-coders.com/chessbot" target="_blank">'
+                                        + '<span class="nav-icon-wrapper">'
+                                        + '<img style="background-color: white;" alt="Chess.bot icon" title="Enabled" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
+                                        + '</span>'
+                                        + '<span id="robot_enabled_message"  class="item-label">Enabled</span>'
+                                        + '</a></li>');
+            $("#LiveChessMainContainer").prepend('<div id="robot_message" style="margin-right: 100px; z-index: 1000; position: relative; background-color: white; font-size: 20px; border-radius: 4px; padding: 6px;">Game not available.</div>')
+        }
         currentBot = CURRENT_BOT_LIVE;
         livePagePreparations(botEngine);
     }
@@ -338,10 +354,10 @@ var pageManager = {};
     // Suggestion squares
     var $pinkSquare = $('<div>', {
         'id': 'pinkSquare',
-        'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: #7ef502;',
+        'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: #7ef502;'
     }), $pinkSquare2 = $('<div>', {
         'id': 'pinkSquare',
-        'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: #f55252;',
+        'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: #f55252;'
     });
 
     function madeMachineMove(move) {
@@ -349,16 +365,25 @@ var pageManager = {};
         var fromSquare = move.substring(0,2),
             toSquare = move.substring(2,4),
             // Find board container
-            $boardContainer = $('.boardContainer').not('.visibilityHidden').not('.chess_com_hidden'),
+            $boardContainer = isBetaDesign 
+                    ? $('.tab-pane.active:not(.ng-hide) .game-board-container')
+                    : $('.boardContainer').not('.visibilityHidden').not('.chess_com_hidden'),
             // Find board
-            $board = $boardContainer.find('.chess_viewer'),
+            $board = isBetaDesign 
+                    ? $boardContainer.find('.chessboard')
+                    : $boardContainer.find('.chess_viewer'),
             // Calculate sizes
             boardHeight = $board.height(),
             boardWidth = $board.width(),
-            pieceHeight = (boardHeight - 2) / 8,
-            pieceWidth = (boardWidth - 2) / 8,
+            betaSizeCorrection = isBetaDesign ? 1 : 2;
+            pieceHeight = (boardHeight - betaSizeCorrection) / 8,
+            pieceWidth = (boardWidth - betaSizeCorrection) / 8,
             // Is flipped?
-            is_flipped = $board.hasClass('chess_boardFlipped');
+            is_flipped = isBetaDesign ? $boardContainer.parent().find(".player-info.black.bottom").length > 0 : $board.hasClass('chess_boardFlipped'),
+            betaPositionFix = isBetaDesign ? (is_flipped ? -1 : 1 ) : 0,
+            betaVerticalFix = isBetaDesign ? (is_flipped ? boardHeight / 55 : -boardHeight / 55 ) : 1,
+            betaHorizontalFix = isBetaDesign ? 0 : 1;
+        
         /*
         // I keep this unusefull code to remember how can i made it fully automattic
         $board.find('.chess_com_piece.pinked').css('background-color', '');
@@ -369,11 +394,11 @@ var pageManager = {};
 
         function placeSquareToPoint($square, point) {
             if (!is_flipped) {
-                var pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * point[1]) - 1; // 1 pixel from border
-                var pinkLeft = $boardArea[0].offsetLeft + pieceWidth * (point.charCodeAt(0) - 97) + 1; // 'a'.charCodeAt(0) == 97
+                var pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * (parseInt(point[1]) + betaPositionFix)) - betaVerticalFix; // 1 pixel from border
+                var pinkLeft = $boardArea[0].offsetLeft + pieceWidth * (point.charCodeAt(0) - 97) + betaHorizontalFix; // 'a'.charCodeAt(0) == 97
             } else {
-                var pinkTop = $boardArea[0].offsetTop + (pieceHeight * (point[1] - 1)) + 1; // 1 pixel from border
-                var pinkLeft = $boardArea[0].offsetLeft + (boardWidth - pieceWidth * (point.charCodeAt(0) - 96)) - 1; // 'a'.charCodeAt(0) == 97
+                var pinkTop = $boardArea[0].offsetTop + (pieceHeight * (parseInt(point[1]) - 1 + betaPositionFix)) + betaVerticalFix; // 1 pixel from border
+                var pinkLeft = $boardArea[0].offsetLeft + (boardWidth - pieceWidth * (point.charCodeAt(0) - 96)) - betaHorizontalFix; // 'a'.charCodeAt(0) == 97
             }
 
             $square.css({
@@ -414,8 +439,11 @@ var pageManager = {};
             }
         }
     }
+    
+    return page;
+};
 
-})(pageManager, jQuery, this, cookie);
+var pageManager = new PageManager(jQuery, this, cookie);
 
 // Startup code
 $(document).ready(function() {
@@ -424,7 +452,8 @@ $(document).ready(function() {
             pageManager.createSimpleBot(bot);
         } else {
             setTimeout(function(){
-                pageManager.createLiveBot(bot);
+                var betaDesign = $('#top_bar_settings').length == 0;
+                pageManager.createLiveBot(bot, betaDesign);
             }, 5000);
         }
         bot.moveFound = pageManager.showMove;
