@@ -3,7 +3,7 @@
 .gitignore export-ignore
 .eslintrc export-ignore
 .eslintignore export-ignore
-codeclimate.yml export-ignore
+.codeclimate.yml export-ignore
 
 scripts/garbochess-* export-ignore
 images/*robot-*.png export-ignore
