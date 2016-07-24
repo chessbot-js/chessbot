@@ -1,3 +1,4 @@
+/*eslint-env browser*/
 /* global chrome, CMD_START_BOT, bot */
 
 var Bot = function ($) {
@@ -52,7 +53,7 @@ var Bot = function ($) {
         if (engine.moveFound != null) {
             engine.moveFound(move);
         } else {
-            alert(move);
+            console.error("Error move:" + move);
         }
     }
 
@@ -80,7 +81,7 @@ var Bot = function ($) {
                         }
                     };
                     g_backgroundEngine.error = function (e) {
-                        alert("Error from background worker:" + e.message);
+                        console.error("Error from background worker:" + e.message);
                     };
                     if (success) {
                         success();
@@ -230,7 +231,6 @@ var PageManager = function($, window, cookieManager){
     }
 
     function livePagePreparations(engine) {
-        // TODO: Special code for observing
         var targets = isBetaDesign ? '.game-controls.game.playing div.notationVertical a.gotomove' : '.dijitVisible #moves div.notation .gotomove';
         // Robot icon actions
         $('#robot_message')
@@ -375,7 +375,7 @@ var PageManager = function($, window, cookieManager){
             // Calculate sizes
             boardHeight = $board.height(),
             boardWidth = $board.width(),
-            betaSizeCorrection = isBetaDesign ? 1 : 2;
+            betaSizeCorrection = isBetaDesign ? 1 : 2,
             pieceHeight = (boardHeight - betaSizeCorrection) / 8,
             pieceWidth = (boardWidth - betaSizeCorrection) / 8,
             // Is flipped?
@@ -393,12 +393,13 @@ var PageManager = function($, window, cookieManager){
         $boardArea = $board.find("div[id^=chessboard_][id$=_boardarea]");
 
         function placeSquareToPoint($square, point) {
+            var pinkTop, pinkLeft;
             if (!is_flipped) {
-                var pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * (parseInt(point[1]) + betaPositionFix)) - betaVerticalFix; // 1 pixel from border
-                var pinkLeft = $boardArea[0].offsetLeft + pieceWidth * (point.charCodeAt(0) - 97) + betaHorizontalFix; // 'a'.charCodeAt(0) == 97
+                pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * (parseInt(point[1], 10) + betaPositionFix)) - betaVerticalFix; // 1 pixel from border
+                pinkLeft = $boardArea[0].offsetLeft + pieceWidth * (point.charCodeAt(0) - 97) + betaHorizontalFix; // 'a'.charCodeAt(0) == 97
             } else {
-                var pinkTop = $boardArea[0].offsetTop + (pieceHeight * (parseInt(point[1]) - 1 + betaPositionFix)) + betaVerticalFix; // 1 pixel from border
-                var pinkLeft = $boardArea[0].offsetLeft + (boardWidth - pieceWidth * (point.charCodeAt(0) - 96)) - betaHorizontalFix; // 'a'.charCodeAt(0) == 97
+                pinkTop = $boardArea[0].offsetTop + (pieceHeight * (parseInt(point[1], 10) - 1 + betaPositionFix)) + betaVerticalFix; // 1 pixel from border
+                pinkLeft = $boardArea[0].offsetLeft + (boardWidth - pieceWidth * (point.charCodeAt(0) - 96)) - betaHorizontalFix; // 'a'.charCodeAt(0) == 97
             }
 
             $square.css({
@@ -417,12 +418,11 @@ var PageManager = function($, window, cookieManager){
     
 
     page.showMove = function (data) {        
+        var move = (data || {}).nextMove;
         if (currentBot == CURRENT_BOT_STANDART) {
-            var move = (data || {}).nextMove;
             $('#robot_text').text('Best move: '  + move);
         } else {
             // Live and simple version are same
-            var move = (data || {}).nextMove;
             var humanMoves = (data || {}).humanMoves; 
             if (humanMoves != '') {
                 humanMoves = humanMoves.split(' ');
