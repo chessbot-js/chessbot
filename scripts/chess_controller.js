@@ -1,5 +1,5 @@
 /*eslint-env browser*/
-/* global chrome, CMD_START_BOT, bot */
+/* global chrome */
 
 var Bot = function ($) {
     var engine = {},
@@ -11,7 +11,7 @@ var Bot = function ($) {
     }
 
     var g_backgroundEngineValid = true,
-        g_backgroundEngine,
+        g_backgroundEngine = null,
         g_analyzing = false,
         blob = null;
 
@@ -43,14 +43,14 @@ var Bot = function ($) {
     }
 
     function EnsureAnalysisStopped() {
-        if (g_analyzing && g_backgroundEngine != null) {
+        if (g_analyzing && g_backgroundEngine !== null) {
             g_backgroundEngine.terminate();
             g_backgroundEngine = null;
         }
     }
 
     function MakeMove(move) {
-        if (engine.moveFound != null) {
+        if (engine.moveFound !== null) {
             engine.moveFound(move);
         } else {
             console.error("Error move:" + move);
@@ -62,7 +62,7 @@ var Bot = function ($) {
             return false;
         }
 
-        if (g_backgroundEngine == null) {
+        if (g_backgroundEngine === null) {
             // g_backgroundEngineValid = true;
                 try {
                     g_backgroundEngine = new Worker(window.URL.createObjectURL(blob));
@@ -145,7 +145,7 @@ var Bot = function ($) {
 
     engine.makeLiveSuggest = function (movesArray) {
         // Terminate engine
-        if (g_backgroundEngine != null) {
+        if (g_backgroundEngine !== null) {
             g_backgroundEngine.terminate();
             g_backgroundEngine = null;
         }
@@ -382,16 +382,16 @@ var PageManager = function($, window, cookieManager){
             is_flipped = isBetaDesign ? $boardContainer.parent().find(".player-info.black.bottom").length > 0 : $board.hasClass('chess_boardFlipped'),
             betaPositionFix = isBetaDesign ? (is_flipped ? -1 : 1 ) : 0,
             betaVerticalFix = isBetaDesign ? (is_flipped ? boardHeight / 55 : -boardHeight / 55 ) : 1,
-            betaHorizontalFix = isBetaDesign ? 0 : 1;
+            betaHorizontalFix = isBetaDesign ? 0 : 1,
+            $boardArea = $board.find("div[id^=chessboard_][id$=_boardarea]");
         
         /*
         // I keep this unusefull code to remember how can i made it fully automattic
         $board.find('.chess_com_piece.pinked').css('background-color', '');
         $board.find("img[id^=img_chessboard_][id$=_" + fromSquare+ "]").addClass('pinked').css('background-color', 'pink');
         */
-        // Move pinkSquares to the right place
-        $boardArea = $board.find("div[id^=chessboard_][id$=_boardarea]");
 
+        // Move pinkSquares to the right place
         function placeSquareToPoint($square, point) {
             var pinkTop, pinkLeft;
             if (!is_flipped) {
@@ -428,7 +428,7 @@ var PageManager = function($, window, cookieManager){
                 humanMoves = humanMoves.split(' ');
                 for (hm in humanMoves) {
                     if (hm == 0) { continue; }
-                    humanMoves[hm] = ((parseInt(hm) + currentColor) % 2 == 0 ? '↑' : '↓') + humanMoves[hm];
+                    humanMoves[hm] = ((parseInt(hm, 10) + currentColor) % 2 == 0 ? '↑' : '↓') + humanMoves[hm];
                 }
                 move = (currentColor % 2 == 0 ? '↑' : '↓') + humanMoves.slice(0,5).join(' ');
             }
