@@ -119,7 +119,7 @@ var Bot = function ($) {
                 if (i === movesMaded && movesArray[i].innerText !== '' && movesArray[i].innerText.indexOf('0') === -1) {
                     movesMaded++;
                     // b_console.log("Move: " + move);
-                    return movesArray[i].innerText;
+                    return movesArray[i].innerText.replace('O-O+', 'O-O'); // Sometimes it was happened
                 }
             }
         }
@@ -249,7 +249,8 @@ var PageManager = function($, window, cookieManager){
             });
 
         var previousMovesCount = 0;
-        function movesObserver () {
+        MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+        var observer = new MutationObserver(function(mutations, observer) {
             // fired when a mutation occurs
             var currentMovesCount = $(targets).filter(function () {
                 return !!this.innerText;
@@ -266,9 +267,19 @@ var PageManager = function($, window, cookieManager){
             } else {
                 $('#robot_message').text('Game not available.');
             }
-        }
+        });
 
-        setInterval(movesObserver, 1000);
+        var observeReadyInterval = setInterval(function(){
+            var observeTarget = isBetaDesign ? $('#LiveChessTopSideBarTabset .tab-content') : $('#chess_boards');
+            if (observeTarget.length > 0) {
+                observer.observe(observeTarget[0], {		
+                   subtree: true,
+                   attributes: false,
+                   childList: true
+                });
+                clearInterval(observeReadyInterval);
+            }
+        }, 5000);
         // And go!
         // enableSuggestion = false; // Fix trouble with cookie removing after refresh. // cookieManager.get(liveChessCookie) == '0';
         // toggleSuggestionLive($('#robot_link')[0]);
