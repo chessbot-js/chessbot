@@ -6,5 +6,9 @@
   "appDescription": {
     "message": "Chess.com bot is chess bot working as Chrome extension at site Chess.com.",
     "description": "The description of the application"
+  },
+  "appShortName": {
+    "message": "Chess.com suggestion extension",
+    "description": "The short name of the application"
   }
 }
