@@ -15,17 +15,6 @@ var Bot = function ($) {
         g_analyzing = false,
         blob = null;
 
-    /*
-     var element = document.getElementById(request.query);
-     dispatchMouseEvent(element, 'click', true, true);
-    */
-
-    var dispatchMouseEvent = function(target, var_args) {
-            var e = document.createEvent("MouseEvents");
-            e.initEvent.apply(e, Array.prototype.slice.call(arguments, 1));
-            target.dispatchEvent(e);
-    };
-
     function init (afterInit) {
         try {
             $.get("https://raw.githubusercontent.com/recoders/chessbot/master/scripts/garbochess-b.js", {},
@@ -202,6 +191,7 @@ var PageManager = function($, window, cookieManager){
     const CURRENT_BOT_STANDART = 'bot_standart';
     const CURRENT_BOT_LIVE = 'bot_live';
     const CURRENT_BOT_SIMPLE = 'bot_simple';
+    const CURRENT_BOT_LICHESS = 'bot_lichess';
     const CURRENT_BOT_COLOR_WHITE = 0;
     const CURRENT_BOT_COLOR_BLACK = 1;
     var currentBot = CURRENT_BOT_STANDART,
@@ -232,6 +222,9 @@ var PageManager = function($, window, cookieManager){
 
     function livePagePreparations(engine) {
         var targets = isBetaDesign ? '.game-controls.game.playing div.notationVertical a.gotomove' : '.dijitVisible #moves div.notation .gotomove';
+        if (currentBot == CURRENT_BOT_LICHESS) {
+            targets = '.moves turn move';
+        }
         // Robot icon actions
         $('#robot_message')
             .css('cursor', 'pointer')
@@ -249,7 +242,7 @@ var PageManager = function($, window, cookieManager){
             });
 
         var previousMovesCount = 0;
-        MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+        MutationObserver = MutationObserver || window.MutationObserver || window.WebKitMutationObserver;
         var observer = new MutationObserver(function(mutations, observer) {
             // fired when a mutation occurs
             var currentMovesCount = $(targets).filter(function () {
@@ -270,7 +263,9 @@ var PageManager = function($, window, cookieManager){
         });
 
         var observeReadyInterval = setInterval(function(){
-            var observeTarget = isBetaDesign ? $('#LiveChessTopSideBarTabset .tab-content') : $('#chess_boards');
+            var observeTarget = currentBot == CURRENT_BOT_LICHESS ? $('.moves') : (
+                isBetaDesign ? $('#LiveChessTopSideBarTabset .tab-content') : $('#chess_boards')
+            );
             if (observeTarget.length > 0) {
                 observer.observe(observeTarget[0], {		
                    subtree: true,
@@ -319,6 +314,18 @@ var PageManager = function($, window, cookieManager){
         livePagePreparations(botEngine);
     }
 
+    page.createLiChessBot = function (botEngine) {
+        // LiChess version
+        if ($('.lichess_game').hasClass('variant_standard')) {
+            $('#topmenu > section:last-child').after('<a id="robot_link" href="http://re-coders.com/chessbot" target="_blank">'
+                + '<img style="background-color: white; margin: 5px 5px 0px 0px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>'
+                + '<span id="robot_enabled_message" title="Switch on/off." style="cursor: pointer; color: #fff; position: relative; top: -4px; font-size: 16px;">Enabled</span>');
+            $(".lichess_ground > div:first-child").before('<span id="robot_message" style="cursor: pointer; font-size: 20px; background-color: white; border-radius: 5px; padding: 5px;">Bot ready</span>');
+            currentBot = CURRENT_BOT_LICHESS;
+            livePagePreparations(botEngine);
+        }
+    }
+
     function toggleSuggestionStandart(control) {
         enableSuggestion = !enableSuggestion;
         if (enableSuggestion) {
@@ -361,7 +368,6 @@ var PageManager = function($, window, cookieManager){
         standartPagePreparations(botEngine);
     }
 
-
     // Suggestion squares
     var $pinkSquare = $('<div>', {
         'id': 'pinkSquare',
@@ -380,9 +386,11 @@ var PageManager = function($, window, cookieManager){
                     ? $('.tab-pane.active:not(.ng-hide) .game-board-container')
                     : $('.boardContainer').not('.visibilityHidden').not('.chess_com_hidden'),
             // Find board
-            $board = isBetaDesign 
+            $board = currentBot == CURRENT_BOT_LICHESS ? $('.cg-board') : (
+                isBetaDesign
                     ? $boardContainer.find('.chessboard')
-                    : $boardContainer.find('.chess_viewer'),
+                    : $boardContainer.find('.chess_viewer')
+            ),
             // Calculate sizes
             boardHeight = $board.height(),
             boardWidth = $board.width(),
@@ -390,20 +398,16 @@ var PageManager = function($, window, cookieManager){
             pieceHeight = (boardHeight - betaSizeCorrection) / 8,
             pieceWidth = (boardWidth - betaSizeCorrection) / 8,
             // Is flipped?
-            is_flipped = isBetaDesign ? $boardContainer.parent().find(".player-info.black.bottom").length > 0 : $board.hasClass('chess_boardFlipped'),
+            is_flipped = currentBot == CURRENT_BOT_LICHESS ? $board.hasClass('orientation-black') : (
+                isBetaDesign ? $boardContainer.parent().find(".player-info.black.bottom").length > 0 : $board.hasClass('chess_boardFlipped')
+            ),
             betaPositionFix = isBetaDesign ? (is_flipped ? -1 : 1 ) : 0,
             betaVerticalFix = isBetaDesign ? (is_flipped ? boardHeight / 55 : -boardHeight / 55 ) : 1,
             betaHorizontalFix = isBetaDesign ? 0 : 1,
-            $boardArea = $board.find("div[id^=chessboard_][id$=_boardarea]");
-        
-        /*
-        // I keep this unusefull code to remember how can i made it fully automattic
-        $board.find('.chess_com_piece.pinked').css('background-color', '');
-        $board.find("img[id^=img_chessboard_][id$=_" + fromSquare+ "]").addClass('pinked').css('background-color', 'pink');
-        */
+            $boardArea = currentBot === CURRENT_BOT_LICHESS ? $board : $board.find("div[id^=chessboard_][id$=_boardarea]");
 
         // Move pinkSquares to the right place
-        function placeSquareToPoint($square, point) {
+        function placeSquareToPointChessCom($square, point) {
             var pinkTop, pinkLeft;
             if (!is_flipped) {
                 pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * (parseInt(point[1], 10) + betaPositionFix)) - betaVerticalFix; // 1 pixel from border
@@ -422,12 +426,10 @@ var PageManager = function($, window, cookieManager){
             $square.appendTo($board);
         }
 
-        placeSquareToPoint($pinkSquare, fromSquare);
-        placeSquareToPoint($pinkSquare2, toSquare);
+        placeSquareToPointChessCom($pinkSquare, fromSquare);
+        placeSquareToPointChessCom($pinkSquare2, toSquare);
     }
     
-    
-
     page.showMove = function (data) {        
         var move = (data || {}).nextMove;
         if (currentBot == CURRENT_BOT_STANDART) {
@@ -458,23 +460,28 @@ var pageManager = new PageManager(jQuery, this, cookie);
 
 // Startup code
 $(document).ready(function() {
-    if (window.location.pathname === '/live' || window.location.pathname === '/simple') {
-        if (window.location.pathname === '/simple') {
-            pageManager.createSimpleBot(bot);
+    if (window.location.hostname.indexOf('chess.com') > -1) {
+        if (window.location.pathname === '/live' || window.location.pathname === '/simple') {
+            if (window.location.pathname === '/simple') {
+                pageManager.createSimpleBot(bot);
+            } else {
+                setTimeout(function(){
+                    var betaDesign = $('#top_bar_settings').length == 0;
+                    pageManager.createLiveBot(bot, betaDesign);
+                }, 5000);
+            }
+            bot.moveFound = pageManager.showMove;
+
         } else {
-            setTimeout(function(){
-                var betaDesign = $('#top_bar_settings').length == 0;
-                pageManager.createLiveBot(bot, betaDesign);
-            }, 5000);
+
+            pageManager.createStandartBot();
+            bot.moveFound = pageManager.showMove;
+
+            var fen = bot.getCurrentFen();
+            bot.makeMove(fen);
         }
+    } else if (window.location.hostname.indexOf('lichess.org') > -1 && window.location.pathname !== '') {
+        pageManager.createLiChessBot(bot);
         bot.moveFound = pageManager.showMove;
-
-    } else {
-
-        pageManager.createStandartBot();
-        bot.moveFound = pageManager.showMove;
-
-        var fen = bot.getCurrentFen();
-        bot.makeMove(fen);
     }
 });
