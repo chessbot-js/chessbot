@@ -3,7 +3,7 @@
   "name": "__MSG_appName__",
   "short_name": "__MSG_appShortName__",
   "description": "__MSG_appDescription__",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "homepage_url": "http://re-coders.com/chessbot",
   "default_locale": "en",
   "icons": {
@@ -26,7 +26,8 @@
         "http://*.chess.com/live", "https://*.chess.com/live",
         "http://*.chess.com/live?*", "https://*.chess.com/live?*",
         "http://*.chess.com/simple?v=*", "https://*.chess.com/simple?v=*",
-        "http://*.lichess.org/*", "https://*.lichess.org/*" ]
+        "http://*.lichess.org/*", "https://*.lichess.org/*",
+        "http://*.chesskid.com/simple*", "https://*.chesskid.com/simple*"]
   } ],
   "permissions": [
     "declarativeContent",

@@ -192,6 +192,8 @@ var PageManager = function($, window, cookieManager){
     const CURRENT_BOT_LIVE = 'bot_live';
     const CURRENT_BOT_SIMPLE = 'bot_simple';
     const CURRENT_BOT_LICHESS = 'bot_lichess';
+    const CURRENT_BOT_CHESSKID_SIMPLE = 'bot_chesskid_simple';
+    const CURRENT_BOT_CHESSKID_STANDART = 'bot_chesskid_standart';
     const CURRENT_BOT_COLOR_WHITE = 0;
     const CURRENT_BOT_COLOR_BLACK = 1;
     var currentBot = CURRENT_BOT_STANDART,
@@ -221,10 +223,19 @@ var PageManager = function($, window, cookieManager){
     }
 
     function livePagePreparations(engine) {
-        var targets = isBetaDesign ? '.game-controls.game.playing div.notationVertical a.gotomove' : '.dijitVisible #moves div.notation .gotomove';
-        if (currentBot == CURRENT_BOT_LICHESS) {
-            targets = '.moves turn move';
-        }
+      var targets;
+      switch (currentBot) {
+        case CURRENT_BOT_LICHESS:
+          targets = '.moves turn move';
+          break;
+        case CURRENT_BOT_CHESSKID_SIMPLE:
+          targets = '#moves div.notation .gotomove';
+          break;
+        default:
+          targets = isBetaDesign ? '.game-controls.game.playing div.notationVertical a.gotomove' : '.dijitVisible #moves div.notation .gotomove';
+          break;
+      }
+      
         // Robot icon actions
         $('#robot_message')
             .css('cursor', 'pointer')
@@ -263,17 +274,26 @@ var PageManager = function($, window, cookieManager){
         });
 
         var observeReadyInterval = setInterval(function(){
-            var observeTarget = currentBot == CURRENT_BOT_LICHESS ? $('.moves') : (
-                isBetaDesign ? $('#LiveChessTopSideBarTabset .tab-content') : $('#chess_boards')
-            );
-            if (observeTarget.length > 0) {
-                observer.observe(observeTarget[0], {		
-                   subtree: true,
-                   attributes: false,
-                   childList: true
-                });
-                clearInterval(observeReadyInterval);
-            }
+          var observeTarget;
+          switch (currentBot) {
+            case CURRENT_BOT_LICHESS:
+              observeTarget = $('.moves');
+              break;
+            case CURRENT_BOT_LIVE:
+              observeTarget = isBetaDesign ? $('#LiveChessTopSideBarTabset .tab-content') : $('#chess_boards');
+              break;
+            case CURRENT_BOT_CHESSKID_SIMPLE:
+              observeTarget = $('#moves');
+              break;
+          }
+          if (observeTarget.length > 0) {
+              observer.observe(observeTarget[0], {		
+                 subtree: true,
+                 attributes: false,
+                 childList: true
+              });
+              clearInterval(observeReadyInterval);
+          }
         }, 5000);
         // And go!
         // enableSuggestion = false; // Fix trouble with cookie removing after refresh. // cookieManager.get(liveChessCookie) == '0';
@@ -324,6 +344,16 @@ var PageManager = function($, window, cookieManager){
             currentBot = CURRENT_BOT_LICHESS;
             livePagePreparations(botEngine);
         }
+    }
+    
+    page.createChessKidBot = function (botEngine) {
+      // ChessKid version
+      $('.logo').after('<a id="robot_link" href="http://re-coders.com/chessbot" target="_blank"><img style="background-color: white;margin: 0px 2px 0px 10px;width: 38px;vertical-align: middle;border-radius: 4px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png"></a>'
+        + '<span id="robot_enabled_message" title="Switch on/off." style="vertical-align: middle; cursor: pointer;color: #2c2c2c;margin-right: 10px;background-color: #fff;padding: 10px;border-radius: 2px;font-weight: bold;">Enabled</span>');
+      $("#chess_board").before('<span id="robot_message" style="cursor: pointer;font-size: 20px;position: relative;top: -3px;left: 133px;background-color: #fff;padding: 5px 10px;border-radius: 3px;">Bot ready</span>');
+        
+      currentBot = CURRENT_BOT_CHESSKID_SIMPLE;
+      livePagePreparations(botEngine);
     }
 
     function toggleSuggestionStandart(control) {
@@ -394,7 +424,7 @@ var PageManager = function($, window, cookieManager){
             // Calculate sizes
             boardHeight = $board.height(),
             boardWidth = $board.width(),
-            betaSizeCorrection = isBetaDesign ? 1 : 2,
+            betaSizeCorrection = isBetaDesign || currentBot == CURRENT_BOT_CHESSKID_SIMPLE ? 1 : 2,
             pieceHeight = (boardHeight - betaSizeCorrection) / 8,
             pieceWidth = (boardWidth - betaSizeCorrection) / 8,
             // Is flipped?
@@ -404,17 +434,19 @@ var PageManager = function($, window, cookieManager){
             betaPositionFix = isBetaDesign ? (is_flipped ? -1 : 1 ) : 0,
             betaVerticalFix = isBetaDesign ? (is_flipped ? boardHeight / 55 : -boardHeight / 55 ) : 1,
             betaHorizontalFix = isBetaDesign ? 0 : 1,
+            chessKidVerticalFix = currentBot == CURRENT_BOT_CHESSKID_SIMPLE ? -12 : 0,
+            chessKidHorizontalFix = currentBot == CURRENT_BOT_CHESSKID_SIMPLE ? -16 : 0,
             $boardArea = currentBot === CURRENT_BOT_LICHESS ? $board : $board.find("div[id^=chessboard_][id$=_boardarea]");
 
         // Move pinkSquares to the right place
         function placeSquareToPointChessCom($square, point) {
             var pinkTop, pinkLeft;
             if (!is_flipped) {
-                pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * (parseInt(point[1], 10) + betaPositionFix)) - betaVerticalFix; // 1 pixel from border
-                pinkLeft = $boardArea[0].offsetLeft + pieceWidth * (point.charCodeAt(0) - 97) + betaHorizontalFix; // 'a'.charCodeAt(0) == 97
+                pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * (parseInt(point[1], 10) + betaPositionFix)) - betaVerticalFix + chessKidVerticalFix; // 1 pixel from border
+                pinkLeft = $boardArea[0].offsetLeft + pieceWidth * (point.charCodeAt(0) - 97) + betaHorizontalFix + chessKidHorizontalFix; // 'a'.charCodeAt(0) == 97
             } else {
-                pinkTop = $boardArea[0].offsetTop + (pieceHeight * (parseInt(point[1], 10) - 1 + betaPositionFix)) + betaVerticalFix; // 1 pixel from border
-                pinkLeft = $boardArea[0].offsetLeft + (boardWidth - pieceWidth * (point.charCodeAt(0) - 96)) - betaHorizontalFix; // 'a'.charCodeAt(0) == 97
+                pinkTop = $boardArea[0].offsetTop + (pieceHeight * (parseInt(point[1], 10) - 1 + betaPositionFix)) + betaVerticalFix + chessKidVerticalFix; // 1 pixel from border
+                pinkLeft = $boardArea[0].offsetLeft + (boardWidth - pieceWidth * (point.charCodeAt(0) - 96)) - betaHorizontalFix + chessKidHorizontalFix; // 'a'.charCodeAt(0) == 97
             }
 
             $square.css({
@@ -481,7 +513,10 @@ $(document).ready(function() {
             bot.makeMove(fen);
         }
     } else if (window.location.hostname.indexOf('lichess.org') > -1 && window.location.pathname !== '') {
-        pageManager.createLiChessBot(bot);
-        bot.moveFound = pageManager.showMove;
+      pageManager.createLiChessBot(bot);
+      bot.moveFound = pageManager.showMove;
+    } else if (window.location.hostname.indexOf('chesskid.com') > -1 && window.location.pathname === '/simple') {
+      pageManager.createChessKidBot(bot);
+      bot.moveFound = pageManager.showMove;
     }
 });
