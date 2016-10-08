@@ -83,10 +83,6 @@ var Bot = function ($) {
         return g_backgroundEngineValid;
     }
 
-    engine.getCurrentFen = function () {
-        return $('.moveactions input').val();
-    };
-
     engine.makeMove = function (fen) {
         if (g_backgroundEngine) {
             g_backgroundEngine.postMessage("position " + fen);
@@ -203,6 +199,10 @@ var PageManager = function($, window, cookieManager){
         currentColor = CURRENT_BOT_COLOR_WHITE,
         isBetaDesign = false;
 
+    page.getCurrentFen = function () {
+        return $('.moveactions input').val();
+    };
+
     function toggleSuggestionLive(element) {
         enableSuggestion = !enableSuggestion;
         if (enableSuggestion) {
@@ -253,8 +253,8 @@ var PageManager = function($, window, cookieManager){
             });
 
         var previousMovesCount = 0;
-        MutationObserver = MutationObserver || window.MutationObserver || window.WebKitMutationObserver;
-        var observer = new MutationObserver(function(mutations, observer) {
+        MutationObserverClass = MutationObserver || window.MutationObserver || window.WebKitMutationObserver;
+        var observer = new MutationObserverClass(function(mutations, observer) {
             // fired when a mutation occurs
             var currentMovesCount = $(targets).filter(function () {
                 return !!this.innerText;
@@ -357,18 +357,32 @@ var PageManager = function($, window, cookieManager){
     }
 
     function toggleSuggestionStandart(control) {
-        enableSuggestion = !enableSuggestion;
-        if (enableSuggestion) {
-            $('#robot_text').show();
-            $(control).addClass('success')
-                .children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
-            cookie.set(eChessCookie, '1');
+      enableSuggestion = !enableSuggestion;
+      if (enableSuggestion) {
+        $('#robot_text').show();
+        if (isBetaDesign) {
+          $(control).text('Enabled');
+          $('#robot_img')
+            .attr('title', 'Enabled')
+            .attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
         } else {
-            $('#robot_text').hide();
-            $(control).removeClass('success')
-                .children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
-            cookie.set(eChessCookie, '0');
+          $(control).addClass('success')
+            .children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
         }
+        cookie.set(eChessCookie, '1');
+      } else {
+        $('#robot_text').hide();
+        if (isBetaDesign) {
+          $(control).text('Disabled');
+          $('#robot_img')
+            .attr('title', 'Disabled')
+            .attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
+        } else {
+          $(control).removeClass('success')
+            .children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
+        }
+        cookie.set(eChessCookie, '0');
+      }
     }
 
     function standartPagePreparations(engine) {
@@ -382,8 +396,20 @@ var PageManager = function($, window, cookieManager){
         toggleSuggestionStandart($('#robot_notice')[0]);
     }
 
-    page.createStandartBot = function (botEngine) {
-        // eChess version
+    page.createStandartBot = function (botEngine, isBeta) {
+      // eChess version
+      isBetaDesign = isBeta == true;
+      if (isBetaDesign) {
+        $('ul.nav-vertical').append('<li nav-item-hide="">'
+                          + '<a id="robot_icon" class="list-item" href="http://re-coders.com/chessbot" target="_blank">'
+                          + '<span class="nav-icon-wrapper">'
+                          + '<img id="robot_img" style="background-color: white;" alt="Chess.bot icon" title="Enabled" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
+                          + '</span>'
+                          + '<span id="robot_notice"  class="item-label">Enabled</span>'
+                          + '</a></li>');
+        $('#topPlayer div.user-tagline')
+          .after('<div id="robot_text" style="font-size: 115%; font-weight: bolder;">Best move: calculating...</div>');
+      } else {
         $('.title.bottom-4')
             .before('<div id="robot_notice" title="Click me to enable/disable bot suggestions." class="notice bottom-8" style="cursor: pointer; height: 20px;"><span id="robot_text"></span></div>');
         $('#robot_text')
@@ -394,8 +420,9 @@ var PageManager = function($, window, cookieManager){
                 'src': 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png',
                 'title': 'Click me to enable/disable bot suggestions.'
             }));
-        currentBot = CURRENT_BOT_STANDART;
-        standartPagePreparations(botEngine);
+      }
+      currentBot = CURRENT_BOT_STANDART;
+      standartPagePreparations(botEngine);
     }
 
     // Suggestion squares
@@ -465,10 +492,23 @@ var PageManager = function($, window, cookieManager){
     page.showMove = function (data) {        
         var move = (data || {}).nextMove;
         if (currentBot == CURRENT_BOT_STANDART) {
+          if (isBetaDesign) {
+            var humanMoves = (data || {}).humanMoves;
+            if (humanMoves != '') {
+                humanMoves = humanMoves.split(' ');
+                for (hm in humanMoves) {
+                    if (hm == 0) { continue; }
+                    humanMoves[hm] = ((parseInt(hm, 10) + currentColor) % 2 == 0 ? '↑' : '↓') + humanMoves[hm];
+                }
+                move = (currentColor % 2 == 0 ? '↑' : '↓') + humanMoves.slice(0,5).join(' ');
+            }
+            $('#robot_text').text('=>: '  + (move != '' ? move : ' : nothing =('));
+          } else {
             $('#robot_text').text('Best move: '  + move);
+          }
         } else {
             // Live and simple version are same
-            var humanMoves = (data || {}).humanMoves; 
+            var humanMoves = (data || {}).humanMoves;
             if (humanMoves != '') {
                 humanMoves = humanMoves.split(' ');
                 for (hm in humanMoves) {
@@ -494,23 +534,30 @@ var pageManager = new PageManager(jQuery, this, cookie);
 $(document).ready(function() {
     if (window.location.hostname.indexOf('chess.com') > -1) {
         if (window.location.pathname === '/live' || window.location.pathname === '/simple') {
-            if (window.location.pathname === '/simple') {
-                pageManager.createSimpleBot(bot);
-            } else {
-                setTimeout(function(){
-                    var betaDesign = $('#top_bar_settings').length == 0;
-                    pageManager.createLiveBot(bot, betaDesign);
-                }, 5000);
-            }
-            bot.moveFound = pageManager.showMove;
+          var betaDesign = $('#top_bar_settings').length == 0;
+          if (window.location.pathname === '/simple') {
+              pageManager.createSimpleBot(bot);
+          } else {
+              setTimeout(function(){
+                  pageManager.createLiveBot(bot, betaDesign);
+              }, 5000);
+          }
+          bot.moveFound = pageManager.showMove;
 
         } else {
+          var betaDesign = $('#EmailChessGame').length == 0;
 
-            pageManager.createStandartBot();
-            bot.moveFound = pageManager.showMove;
+          pageManager.createStandartBot(bot, betaDesign);
+          bot.moveFound = pageManager.showMove;
 
-            var fen = bot.getCurrentFen();
+          if(betaDesign){
+            setTimeout(function(){
+              bot.makeLiveSuggest($('div.notationVertical a.gotomove'));
+            }, 3000);
+          } else {
+            var fen = pageManager.getCurrentFen();
             bot.makeMove(fen);
+          }
         }
     } else if (window.location.hostname.indexOf('lichess.org') > -1 && window.location.pathname !== '') {
       pageManager.createLiChessBot(bot);
