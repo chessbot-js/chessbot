@@ -104,7 +104,7 @@ var Bot = function ($) {
                 if (i === movesMaded && movesArray[i].innerText !== '' && movesArray[i].innerText.indexOf('0') === -1) {
                     movesMaded++;
                     // b_console.log("Move: " + move);
-                    return movesArray[i].innerText.replace('O-O+', 'O-O'); // Sometimes it was happened
+                    return movesArray[i].innerText.replace('O-O+', 'O-O').replace('х', 'x'); // Sometimes it was happened
                 }
             }
         }
