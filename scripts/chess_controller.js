@@ -428,7 +428,7 @@ var PageManager = function($, window, cookieManager){
                     ? $('.tab-pane.active:not(.ng-hide) .game-board-container')
                     : $('.boardContainer').not('.visibilityHidden').not('.chess_com_hidden'),
             // Find board
-            $board = currentBot == CURRENT_BOT_LICHESS ? $('.cg-board') : (
+            $board = currentBot == CURRENT_BOT_LICHESS ? $('.top .cg-board') : (
                 isBetaDesign
                     ? $boardContainer.find('.chessboard')
                     : $boardContainer.find('.chess_viewer')
@@ -547,6 +547,7 @@ var BotFactory = function($, window, bot, pageManager) {
     var botType = undefined;
     factory.const.forEach(function(item, i, arr) {
       if (window.location.hostname.indexOf(item.host) > -1) {
+        if (botType) { return; }
         if (item.path !== undefined && window.location.pathname === item.path) {
           botType = item.name;
         } else 
@@ -559,6 +560,7 @@ var BotFactory = function($, window, bot, pageManager) {
   }
   
   factory.createBot = function(botType) {
+    console.log(botType);
     switch (botType) {
       case 'chess_com_simple':
         pageManager.createSimpleBot(bot);
