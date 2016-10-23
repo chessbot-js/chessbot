@@ -544,7 +544,7 @@ var BotFactory = function($, window, bot, pageManager) {
 
   
   factory.selectBot = function() {
-    var botType = undefined;
+    var botType;
     factory.const.forEach(function(item, i, arr) {
       if (window.location.hostname.indexOf(item.host) > -1) {
         if (botType) { return; }
