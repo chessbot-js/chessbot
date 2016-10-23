@@ -209,15 +209,15 @@ var PageManager = function($, window, cookieManager){
             $('#robot_message').show();
             $('#robot_enabled_message').text('Enabled');
             $(element).children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
+            $greenSquare.show();
             $pinkSquare.show();
-            $pinkSquare2.show();
             cookieManager.set(liveChessCookie, '1');
         } else {
             $('#robot_message').hide();
             $('#robot_enabled_message').text('Disabled');
             $(element).children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
+            $greenSquare.hide();
             $pinkSquare.hide();
-            $pinkSquare2.hide();
             cookieManager.set(liveChessCookie, '0');
         }
     }
@@ -226,7 +226,7 @@ var PageManager = function($, window, cookieManager){
       var targets;
       switch (currentBot) {
         case CURRENT_BOT_LICHESS:
-          targets = '.moves turn move';
+          targets = '.top .moves turn move';
           break;
         case CURRENT_BOT_CHESSKID_SIMPLE:
           targets = '#moves div.notation .gotomove';
