@@ -443,8 +443,8 @@ var PageManager = function($, window, cookieManager){
             is_flipped = currentBot == CURRENT_BOT_LICHESS ? $board.hasClass('orientation-black') : (
                 isBetaDesign ? $boardContainer.parent().find(".player-info.black.bottom").length > 0 : $board.hasClass('chess_boardFlipped')
             ),
-            betaPositionFix = isBetaDesign ? (is_flipped ? -1 : 1 ) : 0,
-            betaVerticalFix = isBetaDesign ? (is_flipped ? pieceHeight : -pieceHeight ) : 1,
+            betaPositionFix = 0,
+            betaVerticalFix = isBetaDesign ? (is_flipped ? -$board[0].offsetTop : $board[0].offsetTop ) : 1, // Probably need some refactoring
             betaHorizontalFix = isBetaDesign ? 0 : 1,
             chessKidVerticalFix = currentBot == CURRENT_BOT_CHESSKID_SIMPLE ? -12 : 0,
             chessKidHorizontalFix = currentBot == CURRENT_BOT_CHESSKID_SIMPLE ? -16 : 0,
