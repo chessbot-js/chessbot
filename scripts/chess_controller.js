@@ -192,13 +192,37 @@ var PageManager = function($, window, cookieManager){
     const CURRENT_BOT_CHESSKID_STANDART = 'bot_chesskid_standart';
     const CURRENT_BOT_COLOR_WHITE = 0;
     const CURRENT_BOT_COLOR_BLACK = 1;
-    var currentBot = CURRENT_BOT_STANDART,
+    var botLinkId = makeid(),
+        botImgId = makeid(),
+        botIconId = makeid(),
+        botMessageId = makeid(),
+        botTextId = makeid(),
+        botNoticeId = makeid(),
+        botMessageEnabledId = makeid(),
+        greenSquareId = makeid(),
+        pinkSquareId = makeid(),
+        
+        currentBot = CURRENT_BOT_STANDART,
         enableSuggestion = true,
         eChessCookie = 'chessbot-echess-enabled',
         liveChessCookie = 'chessbot-live-enabled',
         currentColor = CURRENT_BOT_COLOR_WHITE,
         isBetaDesign = false;
 
+    function makeid()
+    {
+      var text = "";
+      var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      var size = Math.floor(Math.random() * 30) + 10;
+      
+      for( var i = 0; i < size ; i++ ) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+      }
+      text = possible.charAt(Math.floor(Math.random() * 25)) + text;
+      
+      return text;
+    }
+  
     page.getCurrentFen = function () {
         return $('.moveactions input').val();
     };
@@ -206,15 +230,15 @@ var PageManager = function($, window, cookieManager){
     function toggleSuggestionLive(element) {
         enableSuggestion = !enableSuggestion;
         if (enableSuggestion) {
-            $('#robot_message').show();
-            $('#robot_enabled_message').text('Enabled');
+            $('#' + botMessageId).show();
+            $('#' + botMessageEnabledId).text('Enabled');
             $(element).children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
             $greenSquare.show();
             $pinkSquare.show();
             cookieManager.set(liveChessCookie, '1');
         } else {
-            $('#robot_message').hide();
-            $('#robot_enabled_message').text('Disabled');
+            $('#' + botMessageId).hide();
+            $('#' + botMessageEnabledId).text('Disabled');
             $(element).children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
             $greenSquare.hide();
             $pinkSquare.hide();
@@ -237,14 +261,14 @@ var PageManager = function($, window, cookieManager){
       }
       
         // Robot icon actions
-        $('#robot_message')
+        $('#' + botMessageId)
             .css('cursor', 'pointer')
             .on('click', function() {
                 engine.makeLiveSuggest($(targets));
             });
         
-        var clickTarget = '#robot_enabled_message';
-        if (isBetaDesign) { clickTarget = "#robot_icon"; }
+        var clickTarget = '#' + botMessageEnabledId;
+        if (isBetaDesign) { clickTarget = "#" + botIconId; }
         
         $(clickTarget)
             .on('click', function(e) {
@@ -263,13 +287,13 @@ var PageManager = function($, window, cookieManager){
                 if (currentMovesCount != previousMovesCount) {
                     currentColor = currentMovesCount % 2 == 0 ? CURRENT_BOT_COLOR_WHITE : CURRENT_BOT_COLOR_BLACK;
                     previousMovesCount = currentMovesCount;
-                    $('#robot_message').text('Thinking...');
+                    $('#' + botMessageId).text('Thinking...');
                     // Possible new at each fire.
                     // var subtargetName = isBetaDesign ? '.dijitVisible #moves div.notation' : '.dijitVisible #moves div.notation';
                     engine.makeLiveSuggest($(targets));
                 }
             } else {
-                $('#robot_message').text('Game not available.');
+                $('#' + botMessageId).text('Game not available.');
             }
         });
 
@@ -305,33 +329,33 @@ var PageManager = function($, window, cookieManager){
   
     var attachButtonInNewDesign = function(isLive) {
       $('ul.nav-vertical').append('<li nav-item-hide="">'
-                                    + '<a id="robot_icon" class="list-item" href="http://re-coders.com/chessbot" target="_blank">'
+                                    + '<a id="' + botIconId + '" class="list-item" href="http://re-coders.com/chessbot" target="_blank">'
                                     + '<span class="nav-icon-wrapper">'
-                                    + '<img id="robot_img" style="background-color: white;" alt="Chess.bot icon" title="Enabled" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
+                                    + '<img id="' + botImgId + '" style="background-color: white;" alt="Chess.bot icon" title="Enabled" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
                                     + '</span>'
-                                    + '<span id="' + (isLive ? 'robot_enabled_message' : 'robot_notice') + '" class="item-label">Enabled</span>'
+                                    + '<span id="' + (isLive ? botMessageEnabledId : botNoticeId) + '" class="item-label">Enabled</span>'
                                     + '</a></li>');      
     }
     
     page.createLiveBot = function (botEngine, isBeta) {
         isBetaDesign = isBeta == true;
         if (!isBeta) {
-            $('#top_bar_settings').after('<span id="robot_enabled_message" title="Switch on/off." style="cursor: pointer; color: #fff; float: right; margin-right: 10px;">Enabled</span>'
-                + '<a id="robot_link" href="http://re-coders.com/chessbot" target="_blank">'
+            $('#top_bar_settings').after('<span id="' + botMessageEnabledId + '" title="Switch on/off." style="cursor: pointer; color: #fff; float: right; margin-right: 10px;">Enabled</span>'
+                + '<a id="' + botLinkId + '" href="http://re-coders.com/chessbot" target="_blank">'
                 + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>');
             $("#game_container_splitter").before('<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
-                + '<span id="robot_message" style="cursor: pointer;font-size: 20px;position: relative;top: -60px;left: 45px;"></span>');
+                + '<span id="' + botMessageId + '" style="cursor: pointer;font-size: 20px;position: relative;top: -60px;left: 45px;"></span>');
         } else {
           attachButtonInNewDesign(true);
-          $("#LiveChessMainContainer").prepend('<div id="robot_message" style="margin-right: 100px; z-index: 1000; position: relative; background-color: white; font-size: 20px; border-radius: 4px; padding: 6px;">Game not available.</div>')
+          $("#LiveChessMainContainer").prepend('<div id="' + botMessageId + '" style="margin-right: 100px; z-index: 1000; position: relative; background-color: white; font-size: 20px; border-radius: 4px; padding: 6px;">Game not available.</div>')
         }
         currentBot = CURRENT_BOT_LIVE;
         livePagePreparations(botEngine);
     }
 
     page.createSimpleBot = function (botEngine) {
-        $('.more').parent().after('<li><span id="robot_message" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
-            + '<a id="robot_link" style="background-color: #5d873b;" href="http://re-coders.com/chessbot" title="Switch robot on/off. To open source - right click, then open in new tab.">'
+        $('.more').parent().after('<li><span id="' + botMessageId + '" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
+            + '<a id="' + botLinkId + '" style="background-color: #5d873b;" href="http://re-coders.com/chessbot" title="Switch robot on/off. To open source - right click, then open in new tab.">'
             + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
             + '</a></li>');
         currentBot = CURRENT_BOT_SIMPLE;
@@ -341,10 +365,10 @@ var PageManager = function($, window, cookieManager){
     page.createLiChessBot = function (botEngine) {
         // LiChess version
         if ($('.lichess_game').hasClass('variant_standard')) {
-            $('#topmenu > section:last-child').after('<a id="robot_link" href="http://re-coders.com/chessbot" target="_blank">'
+            $('#topmenu > section:last-child').after('<a id="' + botLinkId + '" href="http://re-coders.com/chessbot" target="_blank">'
                 + '<img style="background-color: white; margin: 5px 5px 0px 0px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>'
-                + '<span id="robot_enabled_message" title="Switch on/off." style="cursor: pointer; color: #fff; position: relative; top: -4px; font-size: 16px;">Enabled</span>');
-            $(".lichess_ground > div:first-child").before('<span id="robot_message" style="cursor: pointer; font-size: 20px; background-color: white; border-radius: 5px; padding: 5px;">Bot ready</span>');
+                + '<span id="' + botMessageEnabledId + '" title="Switch on/off." style="cursor: pointer; color: #fff; position: relative; top: -4px; font-size: 16px;">Enabled</span>');
+            $(".lichess_ground > div:first-child").before('<span id="' + botMessageId + '" style="cursor: pointer; font-size: 20px; background-color: white; border-radius: 5px; padding: 5px;">Bot ready</span>');
             currentBot = CURRENT_BOT_LICHESS;
             livePagePreparations(botEngine);
         }
@@ -352,9 +376,9 @@ var PageManager = function($, window, cookieManager){
     
     page.createChessKidBot = function (botEngine) {
       // ChessKid version
-      $('.logo').after('<a id="robot_link" href="http://re-coders.com/chessbot" target="_blank"><img style="background-color: white;margin: 0px 2px 0px 10px;width: 38px;vertical-align: middle;border-radius: 4px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png"></a>'
-        + '<span id="robot_enabled_message" title="Switch on/off." style="vertical-align: middle; cursor: pointer;color: #2c2c2c;margin-right: 10px;background-color: #fff;padding: 10px;border-radius: 2px;font-weight: bold;">Enabled</span>');
-      $("#chess_board").before('<span id="robot_message" style="cursor: pointer;font-size: 20px;position: relative;top: -3px;left: 133px;background-color: #fff;padding: 5px 10px;border-radius: 3px;">Bot ready</span>');
+      $('.logo').after('<a id="' + botLinkId + '" href="http://re-coders.com/chessbot" target="_blank"><img style="background-color: white;margin: 0px 2px 0px 10px;width: 38px;vertical-align: middle;border-radius: 4px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png"></a>'
+        + '<span id="' + botMessageEnabledId + '" title="Switch on/off." style="vertical-align: middle; cursor: pointer;color: #2c2c2c;margin-right: 10px;background-color: #fff;padding: 10px;border-radius: 2px;font-weight: bold;">Enabled</span>');
+      $("#chess_board").before('<span id="' + botMessageId + '" style="cursor: pointer;font-size: 20px;position: relative;top: -3px;left: 133px;background-color: #fff;padding: 5px 10px;border-radius: 3px;">Bot ready</span>');
         
       currentBot = CURRENT_BOT_CHESSKID_SIMPLE;
       livePagePreparations(botEngine);
@@ -366,7 +390,7 @@ var PageManager = function($, window, cookieManager){
       var ableIcon = enableSuggestion ? 'robot-20.png' : 'norobot-20.png';
       if (isBetaDesign) {
         $(control).text(ableText);
-        $('#robot_img')
+        $('#' + botImgId)
           .attr('title', ableText)
           .attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/' + ableIcon);
       } else {
@@ -377,14 +401,14 @@ var PageManager = function($, window, cookieManager){
     }
 
     function standartPagePreparations(engine) {
-        $('#robot_notice')
+        $('#' + botNoticeId)
             .on('click', function(e) {
                 toggleSuggestionStandart(this);
                 return false;
             });
 
         enableSuggestion = cookieManager.get(eChessCookie) == '0';
-        toggleSuggestionStandart($('#robot_notice')[0]);
+        toggleSuggestionStandart($('#' + botNoticeId)[0]);
     }
 
     page.createStandartBot = function (botEngine, isBeta) {
@@ -393,13 +417,13 @@ var PageManager = function($, window, cookieManager){
       if (isBetaDesign) {
         attachButtonInNewDesign(true);
         $('#topPlayer div.user-tagline')
-          .after('<div id="robot_text" style="font-size: 115%; font-weight: bolder;">Best move: calculating...</div>');
+          .after('<div id="' + botTextId + '" style="font-size: 115%; font-weight: bolder;">Best move: calculating...</div>');
       } else {
         $('.title.bottom-4')
-            .before('<div id="robot_notice" title="Click me to enable/disable bot suggestions." class="notice bottom-8" style="cursor: pointer; height: 20px;"><span id="robot_text"></span></div>');
-        $('#robot_text')
+            .before('<div id="' + botNoticeId + '" title="Click me to enable/disable bot suggestions." class="notice bottom-8" style="cursor: pointer; height: 20px;"><span id="' + botTextId + '"></span></div>');
+        $('#' + botTextId)
             .before($('<img>', {
-                'id': 'robot_icon',
+                'id': botIconId,
                 'style': 'float: left; cursor: pointer;',
                 'alt': 'ChessBot icon',
                 'src': 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png',
@@ -412,10 +436,10 @@ var PageManager = function($, window, cookieManager){
 
     // Suggestion squares
     var $greenSquare = $('<div>', {
-        'id': 'greenSquare',
+        'id': greenSquareId,
         'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: #7ef502;'
     }), $pinkSquare = $('<div>', {
-        'id': 'pinkSquare',
+        'id': pinkSquareId,
         'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: #f55252;'
     });
 
@@ -492,14 +516,14 @@ var PageManager = function($, window, cookieManager){
         if (currentBot == CURRENT_BOT_STANDART) {
           if (isBetaDesign) {
             move = humanMovesModificator(humanMoves);
-            $('#robot_text').text('=>: '  + (move != '' ? move : ' : nothing =('));
+            $('#' + botTextId).text('=>: '  + (move != '' ? move : ' : nothing =('));
           } else {
-            $('#robot_text').text('Best move: '  + move);
+            $('#' + botTextId).text('Best move: '  + move);
           }
         } else {
             // Live and simple version are same
             move = humanMovesModificator(humanMoves);
-            $('#robot_message').text('Best move: '  + (move != '' ? move : ' : nothing =('));
+            $('#' + botMessageId).text('Best move: '  + (move != '' ? move : ' : nothing =('));
             if (enableSuggestion) {
                 madeMachineMove(data.machineMove);
             }
