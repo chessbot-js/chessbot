@@ -332,13 +332,11 @@ var PageManager = function($, window, cookieManager){
     currentBot = CURRENT_BOT_LIVE;
   
     var attachButtonInNewDesign = function(isLive) {
-      $('ul.nav-vertical').append('<li nav-item-hide="">'
-                                    + '<a id="' + botIconId + '" class="list-item" href="http://re-coders.com/chessbot/" target="_blank">'
-                                    + '<span class="nav-icon-wrapper">'
+      $('div.top-level-nav').after(// '<div class="top-level-nav">' +
+                                    '<a id="' + botIconId + '" class="menu-link" href="http://re-coders.com/chessbot/" target="_blank">'
                                     + '<img id="' + botImgId + '" style="background-color: white;" alt="Chess.bot icon" title="Enabled" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
-                                    + '</span>'
-                                    + '<span id="' + (isLive ? botMessageEnabledId : botNoticeId) + '" class="item-label">Enabled</span>'
-                                    + '</a></li>');      
+                                    + '<b id="' + (isLive ? botMessageEnabledId : botNoticeId) + '" class="item-label">Enabled</b>'
+                                    + '</a>');      
     }
     
     page.createLiveBot = function (botEngine, isBeta) {
