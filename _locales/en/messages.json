@@ -1,6 +1,6 @@
 {
   "appName": {
-    "message": "Chess suggestion bot (chess.com/lichess.org)",
+    "message": "Chess bot (suggestions for chess.com/lichess.org)",
     "description": "The name of the application"
   },
   "appDescription": {
@@ -8,7 +8,7 @@
     "description": "The description of the application"
   },
   "appShortName": {
-    "message": "Chess suggestion extension",
+    "message": "Chess bot extension (suggestions)",
     "description": "The short name of the application"
   }
 }

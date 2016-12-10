@@ -153,36 +153,40 @@ var Bot = function ($) {
 }
 bot = new Bot(jQuery);
 
-var CookieMonster = function () {
-    var cookieMonster = {};
-    cookieMonster.get = function ( name ) {
-        var cSIndex = document.cookie.indexOf( name );
-        if (cSIndex == -1) return false;
-        cSIndex = document.cookie.indexOf( name + "=" )
-        if (cSIndex == -1) return false;
-        var cEIndex = document.cookie.indexOf( ";", cSIndex + ( name + "=" ).length );
-        if (cEIndex == -1) cEIndex = document.cookie.length;
-        return document.cookie.substring( cSIndex + ( name + "=" ).length, cEIndex );
-    };
+var CookieMonster = function (cookiePrefix) {
+  cookiePrefix = cookiePrefix || 'hi-thibault-dont-forget-to-upgrade-your-site';
+  var cookieMonster = {};
+  cookieMonster.get = function ( name ) {
+    name = cookiePrefix + '-' + name;
+    var cSIndex = document.cookie.indexOf( name );
+    if (cSIndex == -1) return false;
+    cSIndex = document.cookie.indexOf( name + "=" )
+    if (cSIndex == -1) return false;
+    var cEIndex = document.cookie.indexOf( ";", cSIndex + ( name + "=" ).length );
+    if (cEIndex == -1) cEIndex = document.cookie.length;
+    return document.cookie.substring( cSIndex + ( name + "=" ).length, cEIndex );
+  };
 
-    cookieMonster.del = function ( name ) {
-        if ( getCookie( name )) {
-            document.cookie = name + "=; expires=Thu, 01-Jan-70 00:00:01 GMT";
-        }
-    };
+  cookieMonster.del = function ( name ) {
+    name = cookiePrefix + '-' + name;
+    if ( getCookie( name )) {
+      document.cookie = name + "=; expires=Thu, 01-Jan-70 00:00:01 GMT";
+    }
+  };
 
-    cookieMonster.set = function ( name, value, expire ) {
-        var time = new Date();
-        time.setTime( time.getTime() + expire );
-        document.cookie = name + "=" + value + "; expires=" + time.toGMTString();
-        return true;
-    };
-    
-    return cookieMonster;
+  cookieMonster.set = function ( name, value, expire ) {
+    name = cookiePrefix + '-' + name;
+    var time = new Date();
+    time.setTime( time.getTime() + expire );
+    document.cookie = name + "=" + value + "; expires=" + time.toGMTString();
+    return true;
+  };
+
+  return cookieMonster;
 }
-var cookie = new CookieMonster();
 
 var PageManager = function($, window, cookieManager){
+    if (!cookieManager) { cookieManager = new CookieMonster(makeid())}
     var page = page || {};
     const CURRENT_BOT_STANDART = 'bot_standart';
     const CURRENT_BOT_LIVE = 'bot_live';
@@ -277,7 +281,7 @@ var PageManager = function($, window, cookieManager){
             });
 
         var previousMovesCount = 0;
-        MutationObserverClass = MutationObserver || window.MutationObserver || window.WebKitMutationObserver;
+        var MutationObserverClass = MutationObserver || window.MutationObserver || window.WebKitMutationObserver;
         var observer = new MutationObserverClass(function(mutations, observer) {
             // fired when a mutation occurs
             var currentMovesCount = $(targets).filter(function () {
@@ -329,7 +333,7 @@ var PageManager = function($, window, cookieManager){
   
     var attachButtonInNewDesign = function(isLive) {
       $('ul.nav-vertical').append('<li nav-item-hide="">'
-                                    + '<a id="' + botIconId + '" class="list-item" href="http://re-coders.com/chessbot" target="_blank">'
+                                    + '<a id="' + botIconId + '" class="list-item" href="http://re-coders.com/chessbot/" target="_blank">'
                                     + '<span class="nav-icon-wrapper">'
                                     + '<img id="' + botImgId + '" style="background-color: white;" alt="Chess.bot icon" title="Enabled" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
                                     + '</span>'
@@ -341,7 +345,7 @@ var PageManager = function($, window, cookieManager){
         isBetaDesign = isBeta == true;
         if (!isBeta) {
             $('#top_bar_settings').after('<span id="' + botMessageEnabledId + '" title="Switch on/off." style="cursor: pointer; color: #fff; float: right; margin-right: 10px;">Enabled</span>'
-                + '<a id="' + botLinkId + '" href="http://re-coders.com/chessbot" target="_blank">'
+                + '<a id="' + botLinkId + '" href="http://re-coders.com/chessbot/" target="_blank">'
                 + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>');
             $("#game_container_splitter").before('<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
                 + '<span id="' + botMessageId + '" style="cursor: pointer;font-size: 20px;position: relative;top: -60px;left: 45px;"></span>');
@@ -355,7 +359,7 @@ var PageManager = function($, window, cookieManager){
 
     page.createSimpleBot = function (botEngine) {
         $('.more').parent().after('<li><span id="' + botMessageId + '" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>'
-            + '<a id="' + botLinkId + '" style="background-color: #5d873b;" href="http://re-coders.com/chessbot" title="Switch robot on/off. To open source - right click, then open in new tab.">'
+            + '<a id="' + botLinkId + '" style="background-color: #5d873b;" href="http://re-coders.com/chessbot/" title="Switch robot on/off. To open source - right click, then open in new tab.">'
             + '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
             + '</a></li>');
         currentBot = CURRENT_BOT_SIMPLE;
@@ -365,7 +369,7 @@ var PageManager = function($, window, cookieManager){
     page.createLiChessBot = function (botEngine) {
         // LiChess version
         if ($('.lichess_game').hasClass('variant_standard')) {
-            $('#topmenu > section:last-child').after('<a id="' + botLinkId + '" href="http://re-coders.com/chessbot" target="_blank">'
+            $('#topmenu > section:last-child').after('<a id="' + botLinkId + '" href="http://re-coders.com/chessbot/" target="_blank">'
                 + '<img style="background-color: white; margin: 5px 5px 0px 0px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>'
                 + '<span id="' + botMessageEnabledId + '" title="Switch on/off." style="cursor: pointer; color: #fff; position: relative; top: -4px; font-size: 16px;">Enabled</span>');
             $(".lichess_ground > div:first-child").before('<span id="' + botMessageId + '" style="cursor: pointer; font-size: 20px; background-color: white; border-radius: 5px; padding: 5px;">Bot ready</span>');
@@ -376,7 +380,7 @@ var PageManager = function($, window, cookieManager){
     
     page.createChessKidBot = function (botEngine) {
       // ChessKid version
-      $('.logo').after('<a id="' + botLinkId + '" href="http://re-coders.com/chessbot" target="_blank"><img style="background-color: white;margin: 0px 2px 0px 10px;width: 38px;vertical-align: middle;border-radius: 4px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png"></a>'
+      $('.logo').after('<a id="' + botLinkId + '" href="http://re-coders.com/chessbot/" target="_blank"><img style="background-color: white;margin: 0px 2px 0px 10px;width: 38px;vertical-align: middle;border-radius: 4px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png"></a>'
         + '<span id="' + botMessageEnabledId + '" title="Switch on/off." style="vertical-align: middle; cursor: pointer;color: #2c2c2c;margin-right: 10px;background-color: #fff;padding: 10px;border-radius: 2px;font-weight: bold;">Enabled</span>');
       $("#chess_board").before('<span id="' + botMessageId + '" style="cursor: pointer;font-size: 20px;position: relative;top: -3px;left: 133px;background-color: #fff;padding: 5px 10px;border-radius: 3px;">Bot ready</span>');
         
@@ -533,7 +537,7 @@ var PageManager = function($, window, cookieManager){
     return page;
 };
 
-var pageManager = new PageManager(jQuery, this, cookie);
+var pageManager = new PageManager(jQuery, this);
 
 var BotFactory = function($, window, bot, pageManager) {
   var factory = {};
