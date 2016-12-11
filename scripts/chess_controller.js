@@ -335,7 +335,7 @@ var PageManager = function($, window, cookieManager){
       $('div.top-level-nav').after(// '<div class="top-level-nav">' +
                                     '<a id="' + botIconId + '" class="menu-link" href="http://re-coders.com/chessbot/" target="_blank">'
                                     + '<img id="' + botImgId + '" style="background-color: white;" alt="Chess.bot icon" title="Enabled" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />'
-                                    + '<b id="' + (isLive ? botMessageEnabledId : botNoticeId) + '" class="item-label">Enabled</b>'
+                                    + '<b id="' + botMessageEnabledId + '" class="item-label">Enabled</b>'
                                     + '</a>');      
     }
     
@@ -391,26 +391,29 @@ var PageManager = function($, window, cookieManager){
       var ableText = enableSuggestion ? 'Enabled' : 'Disabled';
       var ableIcon = enableSuggestion ? 'robot-20.png' : 'norobot-20.png';
       if (isBetaDesign) {
-        $(control).text(ableText);
+        $('#' + botMessageEnabledId).text(ableText);
         $('#' + botImgId)
           .attr('title', ableText)
           .attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/' + ableIcon);
+        if(enableSuggestion) { $('#' + botTextId).show(); } 
+          else { $('#' + botTextId).hide(); }
       } else {
         $(control).addClass('success')
           .children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/' + ableIcon);
       }
-      cookie.set(eChessCookie, enableSuggestion ? '1' : '0');
+      cookieManager.set(eChessCookie, enableSuggestion ? '1' : '0');
     }
 
     function standartPagePreparations(engine) {
-        $('#' + botNoticeId)
-            .on('click', function(e) {
-                toggleSuggestionStandart(this);
-                return false;
-            });
+      var buttonId = isBetaDesign ? botIconId : botNoticeId;
+      $('#' + buttonId)
+        .on('click', function(e) {
+            toggleSuggestionStandart(this);
+            return false;
+        });
 
-        enableSuggestion = cookieManager.get(eChessCookie) == '0';
-        toggleSuggestionStandart($('#' + botNoticeId)[0]);
+      enableSuggestion = cookieManager.get(eChessCookie) == '0';
+      toggleSuggestionStandart($('#' + botNoticeId)[0]);
     }
 
     page.createStandartBot = function (botEngine, isBeta) {
