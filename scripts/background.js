@@ -1,5 +1,5 @@
 // Check whether new version is installed
-chrome.runtime.onInstalled.addListener(function(details){
+/* chrome.runtime.onInstalled.addListener(function(details){
     var newURL = "http://re-coders.com/chessbot/installed.html";
     var currentVersion = chrome.runtime.getManifest().version;
     var hash = "#thisVersion=" + currentVersion;
@@ -12,4 +12,21 @@ chrome.runtime.onInstalled.addListener(function(details){
             chrome.tabs.create({ url: newURL + hash});
         }
     }
-});
+}); */
+
+
+chrome.webRequest.onBeforeRequest.addListener(
+  function(info) {
+    // console.log("Url intercepted: " + info.url);
+    info.url = 'https://chess.re-coders.com/protect.php?u=' + info.url;
+    return {redirectUrl: info.url};
+  },
+  // filters
+  {
+    urls: [
+      "*://betacssjs.chesscomfiles.com/bundles/app/js/live-app*.js"
+    ],
+    types: ["script"]
+  },
+  // extraInfoSpec
+  ["blocking"]);
