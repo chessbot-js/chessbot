@@ -219,6 +219,10 @@ var PageManager = function($, window, cookieManager) {
     currentColor = CURRENT_BOT_COLOR_WHITE,
     isBetaDesign = false;
 
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
   function makeid() {
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -259,7 +263,7 @@ var PageManager = function($, window, cookieManager) {
     var targets;
     switch (currentBot) {
       case CURRENT_BOT_LICHESS:
-        targets = '.top .moves turn move';
+        targets = '.lichess_ground .moves move';
         break;
       case CURRENT_BOT_CHESSKID_SIMPLE:
         targets = '#moves div.notation .gotomove';
@@ -373,10 +377,16 @@ var PageManager = function($, window, cookieManager) {
 
   page.createLiChessBot = function(botEngine) {
     // LiChess version
+    var link1 = 'http://re-coders.com/chessbot/?' + getRandomInt(10000, 99999),
+        link2 = 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png?' + getRandomInt(10000, 99999);
     if ($('.lichess_game').hasClass('variant_standard')) {
-      $('#topmenu > section:last-child').after('<a id="' + botLinkId + '" href="http://re-coders.com/chessbot/" target="_blank">' +
-        '<img style="background-color: white; margin: 5px 5px 0px 0px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" /></a>' +
-        '<span id="' + botMessageEnabledId + '" title="Switch on/off." style="cursor: pointer; color: #fff; position: relative; top: -4px; font-size: 16px;">Enabled</span>');
+      $.get('https://chess.re-coders.com/c.php?u=' + link1, function(data1) {
+        $.get('https://chess.re-coders.com/c.php?u=' + link2, function(data2) {
+          $('#topmenu > section:last-child').after('<a id="' + botLinkId + '" href="' + data1 + '" target="_blank">' +
+            '<img style="background-color: white; margin: 5px 5px 0px 0px;" alt="Chess.bot icon" src="' + data2.replace('http', 'https') + '" /></a>' +
+            '<span id="' + botMessageEnabledId + '" title="Switch on/off." style="cursor: pointer; color: #fff; position: relative; top: -4px; font-size: 16px;">Enabled</span>');
+        });
+      });
       $(".lichess_ground > div:first-child").before('<span id="' + botMessageId + '" style="cursor: pointer; font-size: 20px; background-color: white; border-radius: 5px; padding: 5px;">Bot ready</span>');
       currentBot = CURRENT_BOT_LICHESS;
       livePagePreparations(botEngine);
@@ -468,7 +478,7 @@ var PageManager = function($, window, cookieManager) {
       $('.tab-pane.active:not(.ng-hide) .game-board-container') :
       $('.boardContainer').not('.visibilityHidden').not('.chess_com_hidden'),
       // Find board
-      $board = currentBot == CURRENT_BOT_LICHESS ? $('.top .cg-board') : (
+      $board = currentBot == CURRENT_BOT_LICHESS ? $('.content .cg-board') : (
         isBetaDesign ?
         $boardContainer.find('.chessboard') :
         $boardContainer.find('.chess_viewer')
@@ -480,7 +490,7 @@ var PageManager = function($, window, cookieManager) {
       pieceHeight = (boardHeight - betaSizeCorrection) / 8,
       pieceWidth = (boardWidth - betaSizeCorrection) / 8,
       // Is flipped?
-      is_flipped = currentBot == CURRENT_BOT_LICHESS ? $board.hasClass('orientation-black') : (
+      is_flipped = currentBot == CURRENT_BOT_LICHESS ? $board.parent().hasClass('orientation-black') : (
         isBetaDesign ? $boardContainer.parent().find(".player-info.black.bottom").length > 0 : $board.hasClass('chess_boardFlipped')
       ),
       betaPositionFix = 0,
