@@ -6,7 +6,7 @@
 
 [![Click here to lend your support to Chess.com bot](https://images.shulcloud.com/1026/_preview/a45808649c82092f918aefd7fafe7853823d8710.jpg)](http://re-coders.com/chessbot/#donate)
 
-It's a bot for Chess.com. It realised as google chrome extension and can be used 
+It's a bot for Chess.com. It realised as Google Chrome extension and can be used 
 with any chrome-like browsers to win your opponent.
 
 Link to Chrome Store: 
