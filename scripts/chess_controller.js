@@ -360,7 +360,7 @@ var PageManager = function($, window, cookieManager) {
         '<span id="' + botMessageId + '" style="cursor: pointer;font-size: 20px;position: relative;top: -60px;left: 45px;"></span>');
     } else {
       attachButtonInNewDesign(true);
-      $("div.live-app div.sidebar div.board-controls-tab").prepend('<div id="' + botMessageId + '" style="margin-right: 100px; z-index: 1000; position: relative; background-color: white; font-size: 20px; border-radius: 4px; padding: 6px;">Game not available.</div>')
+      $("div.live-app div.sidebar").prepend('<div id="' + botMessageId + '" style="margin-right: 100px; z-index: 1000; position: relative; background-color: white; font-size: 20px; border-radius: 4px; padding: 6px;">Game not available.</div>')
     }
     currentBot = CURRENT_BOT_LIVE;
     livePagePreparations(botEngine);
