@@ -1,10 +1,10 @@
 {
   "appName": {
-    "message": "Chess bot (tips for chess.com/lichess.org)",
+    "message": "Chess bot (tips for chess.com)",
     "description": "The name of the application"
   },
   "appDescription": {
-    "message": "Chess bot is automated suggestion bot working as Chrome extension on sites Chess.com and lichess.org",
+    "message": "Chess bot is automated suggestion bot working as Chrome extension on sites Chess.com",
     "description": "The description of the application"
   },
   "appShortName": {

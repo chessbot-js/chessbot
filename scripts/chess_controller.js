@@ -269,7 +269,7 @@ var PageManager = function($, window, cookieManager) {
         targets = '#moves div.notation .gotomove';
         break;
       default:
-        targets = isBetaDesign ? '.game-controls.game.playing div.notationVertical a.gotomove' : '.dijitVisible #moves div.notation .gotomove';
+        targets = isBetaDesign ? '.game-controls div.move-list-container a.gotomove' : '.dijitVisible #moves div.notation .gotomove';
         break;
     }
 
@@ -319,7 +319,7 @@ var PageManager = function($, window, cookieManager) {
           observeTarget = $('.moves');
           break;
         case CURRENT_BOT_LIVE:
-          observeTarget = isBetaDesign ? $('#LiveChessTopSideBarTabset .tab-content') : $('#chess_boards');
+          observeTarget = isBetaDesign ? $('.game-controls .move-list-container') : $('#chess_boards');
           break;
         case CURRENT_BOT_CHESSKID_SIMPLE:
           observeTarget = $('#moves');
@@ -360,7 +360,7 @@ var PageManager = function($, window, cookieManager) {
         '<span id="' + botMessageId + '" style="cursor: pointer;font-size: 20px;position: relative;top: -60px;left: 45px;"></span>');
     } else {
       attachButtonInNewDesign(true);
-      $("#LiveChessMainContainer").prepend('<div id="' + botMessageId + '" style="margin-right: 100px; z-index: 1000; position: relative; background-color: white; font-size: 20px; border-radius: 4px; padding: 6px;">Game not available.</div>')
+      $("div.live-app div.sidebar div.board-controls-tab").prepend('<div id="' + botMessageId + '" style="margin-right: 100px; z-index: 1000; position: relative; background-color: white; font-size: 20px; border-radius: 4px; padding: 6px;">Game not available.</div>')
     }
     currentBot = CURRENT_BOT_LIVE;
     livePagePreparations(botEngine);
@@ -475,7 +475,7 @@ var PageManager = function($, window, cookieManager) {
       toSquare = move.substring(2, 4),
       // Find board container
       $boardContainer = isBetaDesign ?
-      $('.tab-pane.active:not(.ng-hide) .game-board-container') :
+      $('.main-board .chessboard-container'):
       $('.boardContainer').not('.visibilityHidden').not('.chess_com_hidden'),
       // Find board
       $board = currentBot == CURRENT_BOT_LICHESS ? $('.content .cg-board') : (
@@ -491,21 +491,21 @@ var PageManager = function($, window, cookieManager) {
       pieceWidth = (boardWidth - betaSizeCorrection) / 8,
       // Is flipped?
       is_flipped = currentBot == CURRENT_BOT_LICHESS ? $board.parent().hasClass('orientation-black') : (
-        isBetaDesign ? $boardContainer.parent().find(".player-info.black.bottom").length > 0 : $board.hasClass('chess_boardFlipped')
+        isBetaDesign ? $boardContainer.parent().parent().find(".board-player.black.bottom").length > 0 : $board.hasClass('chess_boardFlipped')
       ),
       betaPositionFix = 0,
-      betaVerticalFix = isBetaDesign ? (is_flipped ? -$board[0].offsetTop : $board[0].offsetTop) : 1, // Probably need some refactoring
+      betaVerticalFix = isBetaDesign ? 0 : 1,
       betaHorizontalFix = isBetaDesign ? 0 : 1,
       chessKidVerticalFix = currentBot == CURRENT_BOT_CHESSKID_SIMPLE ? -12 : 0,
       chessKidHorizontalFix = currentBot == CURRENT_BOT_CHESSKID_SIMPLE ? -16 : 0,
-      $boardArea = currentBot === CURRENT_BOT_LICHESS ? $board : $board.find("div[id^=chessboard_][id$=_boardarea]");
+      $boardArea = currentBot === CURRENT_BOT_LICHESS ? $board : $board;
 
     // Move pinkSquares to the right place
     function placeSquareToPointChessCom($square, point) {
       $('#' + $square.attr('id')).remove(); // Fix for: https://github.com/recoders/chessbot/issues/20
       var pinkTop, pinkLeft;
       if (!is_flipped) {
-        pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * (parseInt(point[1], 10) + betaPositionFix)) - betaVerticalFix + chessKidVerticalFix; // 1 pixel from border
+        pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * (parseInt(point[1], 10) + betaPositionFix)) + betaVerticalFix + chessKidVerticalFix; // 1 pixel from border
         pinkLeft = $boardArea[0].offsetLeft + pieceWidth * (point.charCodeAt(0) - 97) + betaHorizontalFix + chessKidHorizontalFix; // 'a'.charCodeAt(0) == 97
       } else {
         pinkTop = $boardArea[0].offsetTop + (pieceHeight * (parseInt(point[1], 10) - 1 + betaPositionFix)) + betaVerticalFix + chessKidVerticalFix; // 1 pixel from border
