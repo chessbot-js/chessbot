@@ -1,33 +1,38 @@
 <!doctype html>
 <html>
-    <head>
-        <title>Chess.com bot</title>
-        <style>
-            body {
-                min-width: 160px;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            }
-            h1 {
-                font-size: small;
-                border-bottom: 1px solid #efefef;
-                padding-bottom: 8px;
-            }
-            button {
-                width: 100%;
-                margin: 3px 0px;
-            }
-        </style>
-        <script src="../scripts/jquery-2.0.3.js"></script>
-        <script src="../scripts/popup.js"></script>
-    </head>
-    <body>
-        <h1>Chess.com bot</h1>
-        <p> Start game on chess.com and Chess Bot will run automatically. </p>
-        <button id="startButton" class="url-container" data-url="https://www.chess.com/play">Go to Chess.com</button>
-        <button id="gotoWebsite" class="url-container" data-url="http://re-coders.com/chessbot">Go to Extension Page</button>
-        <button id="askQuestion" class="url-container" data-url="https://github.com/recoders/chessbot/issues/new?title=Question:&body=I+have+a+question+about+your+extension:&labels=question">Ask a question</button>
-        <button id="bugReport" class="url-container" data-url="https://github.com/recoders/chessbot/issues/new?title=Bug:&body=Describe+situation+as+full+as+you+can&labels=bug">Report a bug</button>
-        <hr/>
-        <button id="donate" class="url-container" data-url="http://re-coders.com/chessbot/#donate">Donate</button>
-    </body>
+	<head>
+		<title>Chessbot</title>
+		<style>
+			body {
+				min-width: 160px;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+			}
+			h1 {
+				font-size: small;
+				border-bottom: 1px solid #efefef;
+				padding-bottom: 8px;
+			}
+			button {
+				width: 100%;
+				margin: 3px 0px;
+			}
+		</style>
+		<script src="../scripts/jquery-2.0.3.js"></script>
+		<script src="../scripts/popup.js"></script>
+	</head>
+	<body>
+		<div class="info">
+			<h1>Chessbot</h1>
+			<button id="analyze" class="event" onclick="DoAnalyze();">Analyze</button>
+			<hr/>
+			<button id="askQuestion" class="url-container" data-url="https://github.com/recoders/chessbot/issues/new?title=Question:&body=I+have+a+question+about+your+extension:&labels=question">Ask a question</button>
+			<button id="bugReport" class="url-container" data-url="https://github.com/recoders/chessbot/issues/new?title=Bug:&body=Describe+situation+as+full+as+you+can&labels=bug">Report a bug</button>
+			<button id="donate" class="url-container" data-url="http://re-coders.com/chessbot/#donate">Donate</button>
+		</div>
+		<hr />
+		<div class="content">
+			<!-- THIS IS WHERE SUGGESTED MOVES WILL APPEAR -->
+			Best move:
+		</div>
+	</body>
 </html>
