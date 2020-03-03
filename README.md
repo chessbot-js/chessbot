@@ -13,7 +13,7 @@ Link to Chrome Store:  **removed**
 
 **A detailed explanation is available at the [Projects](https://github.com/recoders/chessbot/projects) page**
 
-[ ] Move analysis to the popup at `scripts/popup.js` which will allow people to click a button to analyze the game and show the best move
+[X] Move analysis to the popup at `scripts/popup.js` which will allow people to click a button to analyze the game and show the best move
 [ ] Remove background workers
 [ ] Integrate stockfish-js
 
