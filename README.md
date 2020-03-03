@@ -1,4 +1,4 @@
-# Chessbot
+# Chessbot (BETA)
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/d/dokkeahnmkbkoijcglpddnkjeipgepcm.svg?maxAge=2592000)](https://chrome.google.com/webstore/detail/chesscom-bot/dokkeahnmkbkoijcglpddnkjeipgepcm)
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/dokkeahnmkbkoijcglpddnkjeipgepcm.svg?maxAge=2592000?style=plastic)](https://chrome.google.com/webstore/detail/chesscom-bot/dokkeahnmkbkoijcglpddnkjeipgepcm)
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/rating/dokkeahnmkbkoijcglpddnkjeipgepcm.svg?maxAge=2592000?style=plastic)](https://chrome.google.com/webstore/detail/chesscom-bot/dokkeahnmkbkoijcglpddnkjeipgepcm)
@@ -8,6 +8,10 @@ Chessbot is a bot for Chess.com. It realised as Google Chrome extension and can 
 with any chrome-like browsers to win against your opponent.
 
 Link to Chrome Store:  **removed**
+
+## WARNING
+
+This is the Beta branch, which means this is the branch that is currently under development. When changes are made and everything is working properly, new features will be merged into the master branch. This means that there could be bugs with the new features, which could cause things to crash.
 
 ## TODO
 
