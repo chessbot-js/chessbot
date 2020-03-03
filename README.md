@@ -11,6 +11,10 @@ with any chrome-like browsers to win against your opponent.
 
 Link to Chrome Store: **removed**
 
+## Installing
+
+To Install Chessbot, see the [instructions here.](https://github.com/recoders/chessbot/wiki/Installing-Chessbot)
+
 ## Beta version
 
 The [Beta version](https://github.com/recoders/chessbot/beta/) is currently under development, and once it is done and bug-free, shall be merged into the main branch. **Because the Beta version is under development, it is unstable and may not work correctly. Once it is working properly, it will be merged into this main version.** The Beta version's features will be:
