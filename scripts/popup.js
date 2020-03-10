@@ -19,7 +19,14 @@ $(document).ready(function () {
 		chrome.tabs.create({'url': $(this).data('url')});
 	});
 	var bestMove
+	/*
 	chrome.runtime.onConnect.addListener(function(port) {
+		console.assert(port.name == "chessbot");
+  		port.onMessage.addListener(function(msg) {
+			bestMove=msg.bestMove;
+  		});
+	}); */
+	chrome.runtime.onConnectExternal.addListener(function(port) {
 		console.assert(port.name == "chessbot");
   		port.onMessage.addListener(function(msg) {
 			bestMove=msg.bestMove;
