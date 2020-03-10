@@ -16,12 +16,12 @@
 	"default_title" : "__MSG_appShortName__"
   },
   "background": {
-    //"scripts": ["scripts/background.js"]
+   "scripts": ["scripts/background.js"]
   },
   "content_scripts": [ {
 	"js": [
 		"scripts/jquery-2.0.3.js",
-		//"scripts/chess_controller.js",
+		"scripts/chess_controller.js",
 		"scripts/popup.js"
 	],
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
@@ -33,9 +33,9 @@
   "externally_connectable": {
   	"matches": [
 		"*://*.chess.com/*", "*://chess.com/*",
-		"*://*.lichess.org/*", "*://lichess.org/*",
+		"*://*.lichess.org/*", "*://lichess.org/*"
 	]
-  }
+  },
   "permissions": [
     "webRequest",
     "webRequestBlocking",

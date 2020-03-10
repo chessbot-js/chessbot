@@ -16,7 +16,10 @@
  * });
 **/
 
-var Bot = function($) {
+console.log("chess_controller reached");
+
+//var Bot = function($) {
+var Bot = function() {
   var engine = {},
 	b_console = {
 	  log: function(a) {}
@@ -28,7 +31,7 @@ var Bot = function($) {
   }
 
   var port = chrome.runtime.connect({name: "chessbot"});
-	
+
   var g_backgroundEngineValid = true,
 	g_backgroundEngine = null,
 	g_analyzing = false,
@@ -173,7 +176,8 @@ var Bot = function($) {
   return engine;
 }
 
-bot = new Bot(jQuery);
+//bot = new Bot(jQuery);
+bot = new Bot();
 
 var CookieMonster = function(cookiePrefix) {
   cookiePrefix = cookiePrefix || 'hi-thibault-dont-forget-to-upgrade-your-site';
@@ -207,7 +211,8 @@ var CookieMonster = function(cookiePrefix) {
   return cookieMonster;
 }
 
-var PageManager = function($, window, cookieManager) {
+//var PageManager = function($, window, cookieManager) {
+var PageManager = function(window, cookieManager) {
   if (!cookieManager) {
 	cookieManager = new CookieMonster(makeid())
   }
@@ -354,7 +359,8 @@ var PageManager = function($, window, cookieManager) {
   return page;
 };
 
-var pageManager = new PageManager(jQuery, this);
+//var pageManager = new PageManager(jQuery, this);
+var pageManager = new PageManager(this);
 
 var BotFactory = function($, window, bot, pageManager) {
   var factory = {};
@@ -395,9 +401,10 @@ var BotFactory = function($, window, bot, pageManager) {
 		}
 		if (item.path !== undefined && window.location.pathname === item.path) {
 		  botType = item.name;
-		} else
-		if (item.nopath !== undefined && window.location.pathname !== item.nopath) {
+		} else if (item.nopath !== undefined && window.location.pathname !== item.nopath) {
 		  botType = item.name;
+		} else {
+		  botType = 'lichess_live';
 		}
 	  }
 	});
@@ -437,6 +444,7 @@ var BotFactory = function($, window, bot, pageManager) {
 
 // Startup code
 $(document).ready(function() {
-  var botFactory = new BotFactory(jQuery, this, bot, pageManager);
+  //var botFactory = new BotFactory(jQuery, this, bot, pageManager);
+  botFactory = new BOtFactory(this, bot, pageManager);
   botFactory.createBot(botFactory.selectBot());
 });
