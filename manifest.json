@@ -26,15 +26,16 @@
 	],
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 	"matches": [
-    "http://*.chess.com/echess/game?id=*", "https://*.chess.com/echess/game?id=*",
-		"http://*.chess.com/live?v=*", "https://*.chess.com/live?v=*",
-		"http://*.chess.com/daily/game/*", "https://*.chess.com/daily/game/*",
-		"http://*.chess.com/live", "https://*.chess.com/live",
-		"http://*.chess.com/live?*", "https://*.chess.com/live?*",
-		"http://*.chess.com/simple?v=*", "https://*.chess.com/simple?v=*",
-		"http://*.lichess.org/*", "https://*.lichess.org/*",
-		"http://*.chesskid.com/simple*", "https://*.chesskid.com/simple*"]
+		"http://*.chess.com/*", "http://chess.com/*",
+		"http://*.lichess.org/*", "http://lichess.org/*"
+	]
   } ],
+  "externally_connectable": {
+  	"matches": [
+		"*://*.chess.com/*", "*://chess.com/*",
+		"*://*.lichess.org/*", "*://lichess.org/*",
+	]
+  }
   "permissions": [
     "webRequest",
     "webRequestBlocking",
