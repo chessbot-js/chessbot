@@ -1,28 +1,31 @@
+/*
+ * This script receives the best move and displays it, thatway we don't have to edit the page. If we edit the 
+ * page, we can be detected, so we display the best move in this popup window. We don't actually calculate the
+ * best move here, the background.js script does that and then sends us the best move.
+**/
+
+/*
+ * To send data to this script:
+ *
+ * var port = chrome.runtime.connect({name: "chessbot"});
+ * port.postMessage({bestMove: "e2e4"}); // Example of how to send best move to the popup window
+ * port.onMessage.addListener(function(msg) {
+ *	return;
+ * });
+*/
+
 $(document).ready(function () {
 	$('.url-container').on('click', function(){
 		chrome.tabs.create({'url': $(this).data('url')});
 	});
-	/*
-	To send data to this port:
-	var port = chrome.runtime.connect({name: "chessbot"});
-	port.postMessage({moves: ["c2c4"], isWhiteTurn: true}); // Send data to the popup window
-	port.onMessage.addListener(function(msg) {
-		// Handle information from the popup
-	});
-	*/
-	var moves // Moves made
-	var isWhiteTurn // Whether it is white's turn or not
+	var bestMove
 	chrome.runtime.onConnect.addListener(function(port) {
 		console.assert(port.name == "chessbot");
   		port.onMessage.addListener(function(msg) {
-			isWhiteTurn = msg.isWhiteTurn
-			moves = msg.moves
+			bestMove=msg.bestMove;
   		});
 	});
 	$('.event').on('click', function() {
-		$('.content').text("Best move: Thinking...")
-        // ToDo: Analyze and display best move.
-	// Moves shall be contained in :moves: and :isWhiteTurn: shall contain a boolean value as to whether
-	// it is white's turn to move or not.
+		$('.content').text("Best move: "+bestMove);
 	});
 });
