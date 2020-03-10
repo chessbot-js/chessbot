@@ -26,6 +26,6 @@ $(document).ready(function () {
   		});
 	});
 	$('.event').on('click', function() {
-		$('.content').text("Best move: "+bestMove);
+		$('.content').text(bestMove);
 	});
 });
