@@ -14,7 +14,6 @@
 	}
 }); */
 
-
 chrome.webRequest.onBeforeRequest.addListener(
   function(info) {
 	// console.log("Url intercepted: " + info.url);
