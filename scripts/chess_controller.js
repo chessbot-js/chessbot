@@ -1,6 +1,21 @@
 /*eslint-env browser*/
 /* global chrome */
 
+/*
+ * This script gets moves from the page and then calculates the best move.
+ * It sends the best move to the popup so that there is no way to detect page modifications.
+**/
+
+/*
+ * We use this to send data to the popup:
+ *
+ * var port = chrome.runtime.connect({name: "chessbot"});
+ * port.postMessage({bestMove: "e2e4"}); // Example of how to send best move to the popup window
+ * port.onMessage.addListener(function(msg) {
+ *	return;
+ * });
+**/
+
 var Bot = function($) {
   var engine = {},
 	b_console = {
@@ -12,6 +27,8 @@ var Bot = function($) {
 	b_console = console;
   }
 
+  var port = chrome.runtime.connect({name: "chessbot"});
+	
   var g_backgroundEngineValid = true,
 	g_backgroundEngine = null,
 	g_analyzing = false,
@@ -155,6 +172,7 @@ var Bot = function($) {
 
   return engine;
 }
+
 bot = new Bot(jQuery);
 
 var CookieMonster = function(cookiePrefix) {
@@ -202,18 +220,8 @@ var PageManager = function($, window, cookieManager) {
   const CURRENT_BOT_CHESSKID_STANDART = 'bot_chesskid_standart';
   const CURRENT_BOT_COLOR_WHITE = 0;
   const CURRENT_BOT_COLOR_BLACK = 1;
-  var botLinkId = makeid(),
-	botImgId = makeid(),
-	botIconId = makeid(),
-	botMessageId = makeid(),
-	botTextId = makeid(),
-	botNoticeId = makeid(),
-	botMessageEnabledId = makeid(),
-	greenSquareId = makeid(),
-	pinkSquareId = makeid(),
 
-	currentBot = CURRENT_BOT_STANDART,
-	enableSuggestion = true,
+  var	currentBot = CURRENT_BOT_STANDART,
 	eChessCookie = 'chessbot-echess-enabled',
 	liveChessCookie = 'chessbot-live-enabled',
 	currentColor = CURRENT_BOT_COLOR_WHITE;
@@ -222,41 +230,9 @@ var PageManager = function($, window, cookieManager) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  function makeid() {
-	var text = "";
-	var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	var size = Math.floor(Math.random() * 30) + 10;
-
-	for (var i = 0; i < size; i++) {
-	  text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	text = possible.charAt(Math.floor(Math.random() * 25)) + text;
-
-	return text;
-  }
-
   page.getCurrentFen = function() {
 	return $('.moveactions input').val();
   };
-
-  function toggleSuggestionLive(element) {
-	enableSuggestion = !enableSuggestion;
-	if (enableSuggestion) {
-	  $('#' + botMessageId).show();
-	  $('#' + botMessageEnabledId).text('Enabled');
-	  $(element).children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png');
-	  $greenSquare.show();
-	  $pinkSquare.show();
-	  cookieManager.set(liveChessCookie, '1');
-	} else {
-	  $('#' + botMessageId).hide();
-	  $('#' + botMessageEnabledId).text('Disabled');
-	  $(element).children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/norobot-20.png');
-	  $greenSquare.hide();
-	  $pinkSquare.hide();
-	  cookieManager.set(liveChessCookie, '0');
-	}
-  }
 
   function livePagePreparations(engine) {
 	var targets;
@@ -272,25 +248,10 @@ var PageManager = function($, window, cookieManager) {
 		break;
 	}
 
-	// Robot icon actions
-	$('#' + botMessageId)
-	  .css('cursor', 'pointer')
-	  .on('click', function() {
-		engine.makeLiveSuggest($(targets));
-	  });
-
-	var clickTarget = "#" + botIconId;
-
-	$(clickTarget)
-	  .on('click', function(e) {
-		toggleSuggestionLive(this);
-		return false;
-	  });
-
 	var previousMovesCount = 0;
 	var MutationObserverClass = MutationObserver || window.MutationObserver || window.WebKitMutationObserver;
 	var observer = new MutationObserverClass(function(mutations, observer) {
-	  // fired when a mutation occurs
+	  // Fired when a mutation occurs
 	  var currentMovesCount = $(targets).filter(function() {
 		return !!this.innerText;
 	  }).length;
@@ -298,13 +259,13 @@ var PageManager = function($, window, cookieManager) {
 		if (currentMovesCount != previousMovesCount) {
 		  currentColor = currentMovesCount % 2 == 0 ? CURRENT_BOT_COLOR_WHITE : CURRENT_BOT_COLOR_BLACK;
 		  previousMovesCount = currentMovesCount;
-		  $('#' + botMessageId).text('Thinking...');
+		  port.postMessage({bestMove: "Thinking..."});
 		  // Possible new at each fire.
 		  // var subtargetName = isBetaDesign ? '.dijitVisible #moves div.notation' : '.dijitVisible #moves div.notation';
-		  engine.makeLiveSuggest($(targets));
+		  //engine.makeLiveSuggest($(targets)); //TODO: SEND BEST MOVE TO POPUP
 		}
 	  } else {
-		$('#' + botMessageId).text('Game not available.');
+		port.postMessage({bestMove: "Game not available."})
 	  }
 	});
 
@@ -338,149 +299,30 @@ var PageManager = function($, window, cookieManager) {
 
   currentBot = CURRENT_BOT_LIVE;
 
-  var attachButtonInNewDesign = function(isLive) {
-	$('#board-layout-player-top .user-tagline-component > a:last-child').after(
-	  '<a id="' + botIconId + '" href="http://re-coders.com/chessbot/" target="_blank">' +
-	  '<img id="' + botImgId + '" style="background-color: white;" alt="Chess.bot icon" title="Enabled" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />' +
-	  '<b id="' + botMessageEnabledId + '" class="user-tagline-username">Enabled</b>' +
-	  '</a>');
-  }
-
   page.createLiveBot = function(botEngine) {
-	attachButtonInNewDesign(true);
-	$("#sb > .menu.top")
-	  .after('<a id="' + botMessageId + '" style="z-index: 1000; padding: 6px;">Game not available.</a>')
 	currentBot = CURRENT_BOT_LIVE;
-	livePagePreparations(botEngine);
   }
 
   page.createSimpleBot = function(botEngine) {
-	$('.more').parent().after('<li><span id="' + botMessageId + '" style="color: #fff; float: right; margin-right: 10px;">Hi there!</span>' +
-	  '<a id="' + botLinkId + '" style="background-color: #5d873b;" href="http://re-coders.com/chessbot/" title="Switch robot on/off. To open source - right click, then open in new tab.">' +
-	  '<img style="float: right; background-color: white; margin-right: 5px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png" />' +
-	  '</a></li>');
 	currentBot = CURRENT_BOT_SIMPLE;
-	livePagePreparations(botEngine);
   }
 
   page.createLiChessBot = function(botEngine) {
-	// LiChess version
-	var link1 = 'http://re-coders.com/chessbot/?' + getRandomInt(10000, 99999),
-		link2 = 'https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png?' + getRandomInt(10000, 99999);
-	if ($('.lichess_game').hasClass('variant_standard')) {
-	  $.get('https://chess.re-coders.com/c.php?u=' + link1, function(data1) {
-		$.get('https://chess.re-coders.com/c.php?u=' + link2, function(data2) {
-		  $('#topmenu > section:last-child').after('<a id="' + botLinkId + '" href="' + data1 + '" target="_blank">' +
-			'<img style="background-color: white; margin: 5px 5px 0px 0px;" alt="Chess.bot icon" src="' + data2.replace('http', 'https') + '" /></a>' +
-			'<span id="' + botMessageEnabledId + '" title="Switch on/off." style="cursor: pointer; color: #fff; position: relative; top: -4px; font-size: 16px;">Enabled</span>');
-		});
-	  });
-	  $(".lichess_ground > div:first-child").before('<span id="' + botMessageId + '" style="cursor: pointer; font-size: 20px; background-color: white; border-radius: 5px; padding: 5px;">Bot ready</span>');
-	  currentBot = CURRENT_BOT_LICHESS;
-	  livePagePreparations(botEngine);
-	}
+	currentBot = CURRENT_BOT_LICHESS;
   }
 
   page.createChessKidBot = function(botEngine) {
-	// ChessKid version
-	$('.logo').after('<a id="' + botLinkId + '" href="http://re-coders.com/chessbot/" target="_blank"><img style="background-color: white;margin: 0px 2px 0px 10px;width: 38px;vertical-align: middle;border-radius: 4px;" alt="Chess.bot icon" src="https://raw.githubusercontent.com/recoders/chessbot/master/images/robot-20.png"></a>' +
-	  '<span id="' + botMessageEnabledId + '" title="Switch on/off." style="vertical-align: middle; cursor: pointer;color: #2c2c2c;margin-right: 10px;background-color: #fff;padding: 10px;border-radius: 2px;font-weight: bold;">Enabled</span>');
-	$("#chess_board").before('<span id="' + botMessageId + '" style="cursor: pointer;font-size: 20px;position: relative;top: -3px;left: 133px;background-color: #fff;padding: 5px 10px;border-radius: 3px;">Bot ready</span>');
-
 	currentBot = CURRENT_BOT_CHESSKID_SIMPLE;
-	livePagePreparations(botEngine);
   }
 
-  function toggleSuggestionStandart(control) {
-	enableSuggestion = !enableSuggestion;
-	var ableText = enableSuggestion ? 'Enabled' : 'Disabled';
-	var ableIcon = enableSuggestion ? 'robot-20.png' : 'norobot-20.png';
-	$(control).addClass('success')
-	  .children('img').attr('src', 'https://raw.githubusercontent.com/recoders/chessbot/master/images/' + ableIcon);
-	cookieManager.set(eChessCookie, enableSuggestion ? '1' : '0');
-  }
-
-  function standartPagePreparations(engine) {
-	var buttonId = botIconId;
-	$('#' + buttonId)
-	  .on('click', function(e) {
-		toggleSuggestionStandart(this);
-		return false;
-	  });
-
-	enableSuggestion = cookieManager.get(eChessCookie) == '0';
-	toggleSuggestionStandart($('#' + botNoticeId)[0]);
-  }
-
-  page.createStandartBot = function(botEngine, isBeta) {
-	// eChess version
-	attachButtonInNewDesign(true);
-	$('#topPlayer div.user-tagline')
-	  .after('<div id="' + botTextId + '" style="font-size: 115%; font-weight: bolder;">Best move: calculating...</div>');
+  page.createStandartBot = function(botEngine) {
 	currentBot = CURRENT_BOT_STANDART;
-	standartPagePreparations(botEngine);
   }
-
-  // Suggestion squares
-  var $greenSquare = $('<div>', {
-	  'id': greenSquareId,
-	  'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: #7ef502;'
-	}),
-	$pinkSquare = $('<div>', {
-	  'id': pinkSquareId,
-	  'style': 'position: absolute; z-index: 1; opacity: 0.5; background-color: #f55252;'
-	});
 
   function madeMachineMove(move) {
-	if (!move) return;
-	var fromSquare = move.substring(0, 2),
-	  toSquare = move.substring(2, 4),
-	  // Find board container
-	  $boardContainer = $('#board-layout-main');
-	  // Find board
-	  $board = currentBot == CURRENT_BOT_LICHESS
-		? $('.content .cg-board')
-		: $boardContainer.find('#game-board'),
-	  // Calculate sizes
-	  boardHeight = $board.height(),
-	  boardWidth = $board.width(),
-	  betaSizeCorrection = 1; // isBetaDesign || currentBot == CURRENT_BOT_CHESSKID_SIMPLE ? 1 : 2,
-	  pieceHeight = (boardHeight - betaSizeCorrection) / 8,
-	  pieceWidth = (boardWidth - betaSizeCorrection) / 8,
-	  // Is flipped?
-	  is_flipped = currentBot == CURRENT_BOT_LICHESS
-		? $board.parent().hasClass('orientation-black')
-		: $board.hasClass("flipped"),
-	  betaPositionFix = 0,
-	  betaVerticalFix = -1,
-	  betaHorizontalFix = 0,
-	  chessKidVerticalFix = currentBot == CURRENT_BOT_CHESSKID_SIMPLE ? -12 : 0,
-	  chessKidHorizontalFix = currentBot == CURRENT_BOT_CHESSKID_SIMPLE ? -16 : 0,
-	  $boardArea = $board;
-
-	// Move pinkSquares to the right place
-	function placeSquareToPointChessCom($square, point) {
-	  $('#' + $square.attr('id')).remove(); // Fix for: https://github.com/recoders/chessbot/issues/20
-	  var pinkTop, pinkLeft;
-	  if (!is_flipped) {
-		pinkTop = $boardArea[0].offsetTop + (boardHeight - pieceHeight * (parseInt(point[1], 10) + betaPositionFix)) + betaVerticalFix + chessKidVerticalFix; // 1 pixel from border
-		pinkLeft = $boardArea[0].offsetLeft + pieceWidth * (point.charCodeAt(0) - 97) + betaHorizontalFix + chessKidHorizontalFix; // 'a'.charCodeAt(0) == 97
-	  } else {
-		pinkTop = $boardArea[0].offsetTop + (pieceHeight * (parseInt(point[1], 10) - 1 + betaPositionFix)) + betaVerticalFix + chessKidVerticalFix; // 1 pixel from border
-		pinkLeft = $boardArea[0].offsetLeft + (boardWidth - pieceWidth * (point.charCodeAt(0) - 96)) - betaHorizontalFix + chessKidHorizontalFix; // 'a'.charCodeAt(0) == 97
-	  }
-
-	  $square.css({
-		'width': pieceWidth + 'px',
-		'height': pieceHeight + 'px',
-		'top': pinkTop + 'px',
-		'left': pinkLeft + 'px'
-	  });
-	  $square.appendTo($board);
-	}
-
-	placeSquareToPointChessCom($greenSquare, fromSquare);
-	placeSquareToPointChessCom($pinkSquare, toSquare);
+	//var fromSquare = move.substring(0, 2),
+	//    toSquare = move.substring(2, 4),
+	port.postMessage({bestMove: 'Best move: '+move});
   }
 
   page.showMove = function(data) {
@@ -501,14 +343,11 @@ var PageManager = function($, window, cookieManager) {
 	var humanMoves = (data || {}).humanMoves;
 	if (currentBot == CURRENT_BOT_STANDART) {
 		move = humanMovesModificator(humanMoves);
-		$('#' + botTextId).text('=>: ' + (move != '' ? move : ' : nothing =('));
+		port.postMessage({bestMove: 'Best move: ' + (move != '' ? move : ' : nothing =(')});
 	} else {
 	  // Live and simple version are same
 	  move = humanMovesModificator(humanMoves);
-	  $('#' + botMessageId).text('Best move: ' + (move != '' ? move : ' : nothing =('));
-	  if (enableSuggestion) {
-		madeMachineMove(data.machineMove);
-	  }
+	  port.postMessage({bestMove: 'Best move: ' + (move != '' ? move : ' : nothing =(')});
 	}
   }
 
@@ -547,7 +386,6 @@ var BotFactory = function($, window, bot, pageManager) {
 	}
   ];
 
-
   factory.selectBot = function() {
 	var botType;
 	factory.const.forEach(function(item, i, arr) {
@@ -574,25 +412,14 @@ var BotFactory = function($, window, bot, pageManager) {
 		bot.moveFound = pageManager.showMove;
 		break;
 	  case 'chess_com_live':
-		setTimeout(function() {
-		  pageManager.createLiveBot(bot);
-		}, 5000);
+		pageManager.createLiveBot(bot);
 		bot.moveFound = pageManager.showMove;
 		break;
 	  case 'chess_com_standart':
-		var betaDesign = $('#EmailChessGame').length == 0;
-
-		pageManager.createStandartBot(bot, betaDesign);
+		pageManager.createStandartBot(bot);
 		bot.moveFound = pageManager.showMove;
-
-		if (betaDesign) {
-		  setTimeout(function() {
-			bot.makeLiveSuggest($('div.notationVertical a.gotomove'));
-		  }, 3000);
-		} else {
-		  var fen = pageManager.getCurrentFen();
-		  bot.makeMove(fen);
-		}
+		var fen = pageManager.getCurrentFen();
+		bot.makeMove(fen);
 		break;
 	  case 'lichess_live':
 		pageManager.createLiChessBot(bot);
