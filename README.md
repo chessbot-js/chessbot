@@ -1,8 +1,14 @@
+# DISCLAIMER
+This extension was written many years ago as fun and now its not work (or may be not work as it has to be). Sorry, if you want to use but read my comment first: https://github.com/recoders/chessbot/issues/72#issuecomment-631733282
+
+Anyway, I know that GitHub is full of bright talents who wants to make it work, so - go ahead. I can support you, but only by words, not by new code.
+
+So if you want to help - create fork and do commit. Any other issues will be closed as irrelevant.
+
+Thank you and take care of yourself and your family!
+✌️
+
 # Chessbot
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/d/dokkeahnmkbkoijcglpddnkjeipgepcm.svg?maxAge=2592000)](https://chrome.google.com/webstore/detail/chesscom-bot/dokkeahnmkbkoijcglpddnkjeipgepcm)
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/dokkeahnmkbkoijcglpddnkjeipgepcm.svg?maxAge=2592000?style=plastic)](https://chrome.google.com/webstore/detail/chesscom-bot/dokkeahnmkbkoijcglpddnkjeipgepcm)
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/rating/dokkeahnmkbkoijcglpddnkjeipgepcm.svg?maxAge=2592000?style=plastic)](https://chrome.google.com/webstore/detail/chesscom-bot/dokkeahnmkbkoijcglpddnkjeipgepcm)
-[![Code Climate](https://codeclimate.com/github/recoders/chessbot/badges/gpa.svg)](https://codeclimate.com/github/recoders/chessbot)
 
 It's a bot for Chess.com. It realised as Google Chrome extension and can be used 
 with any chrome-like browsers to win against your opponent.
